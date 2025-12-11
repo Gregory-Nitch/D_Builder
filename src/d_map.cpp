@@ -4,7 +4,7 @@
 #include <string>
 #include <memory>
 
-#include "inc/d_map.hpp"
+#include "d_map.hpp"
 
 #define MAX_MAP_SIZE (20)
 
@@ -18,7 +18,7 @@ D_Map::~D_Map()
     //! TODO: this
 }
 
-bool const D_Map::has_exit()
+bool const D_Map::has_exit() const
 {
     return has_exit_flag;
 }
@@ -28,7 +28,7 @@ void D_Map::generate()
     //! TODO: this
 }
 
-void D_Map::save(std::string path, std::string file_name)
+void D_Map::save(std::string path, std::string file_name) const
 {
     //! TODO: this
 }

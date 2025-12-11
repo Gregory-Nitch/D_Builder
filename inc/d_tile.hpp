@@ -8,7 +8,7 @@
 /**
  * @brief Forward declaration of connections for a @D_Tile's internal connection structure.
  */
-typedef struct connections;
+typedef struct connections connections;
 
 class D_Tile
 {
@@ -19,14 +19,14 @@ public:
                            std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> tiles,
                            std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> entrances,
                            std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> exits);
-    std::string const &const get_name();
-    std::string const &const get_theme();
-    uint64_t const get_id();
-    connections get_connections() const;
-    bool const is_permutateable();
-    bool const is_entrance();
-    bool const is_exit();
-    bool const is_flippable();
+    std::string const & get_name() const;
+    std::string const & get_theme() const;
+    uint64_t const get_id() const;
+    connections const get_connections() const;
+    bool const is_permutateable() const;
+    bool const is_entrance() const;
+    bool const is_exit() const;
+    bool const is_flippable() const;
 
 private:
     std::string name;
@@ -72,5 +72,6 @@ private:
     bool is_exit_flag;
     bool is_flippable_flag;
 
+    D_Tile();
     static inline std::shared_ptr<D_Tile> permutate(std::shared_ptr<D_Tile> permutateable);
 };
