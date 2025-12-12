@@ -6,6 +6,9 @@
 #include <unordered_map>
 #include <string>
 
-std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Tiles_Map;
-std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Entrances_Map;
-std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Exit_Map;
+#define DEFAULT_PATH "../imgs/input"
+
+extern std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Tile_Map;
+extern std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Entrance_Map;
+extern std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Exit_Map;
+

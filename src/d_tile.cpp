@@ -66,7 +66,7 @@ bool const D_Tile::is_flippable() const
     //! TODO: This
 }
 
-std::string const to_string() const
+std::string const D_Tile::to_string() const
 {
     //! TODO: This
 }
