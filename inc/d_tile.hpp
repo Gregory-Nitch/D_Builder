@@ -4,36 +4,10 @@
 #include <memory>
 #include <cstdint>
 #include <unordered_map>
+#include <vector>
 
-/**
- * @brief Forward declaration of connections for a @D_Tile's internal connection structure.
- */
-typedef struct connections connections;
-
-class D_Tile
+typedef struct D_Connections
 {
-public:
-    D_Tile(std::string path);
-    ~D_Tile();
-    static void load_tiles(std::string dir_path,
-                           std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> tiles,
-                           std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> entrances,
-                           std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> exits);
-    std::string const & get_name() const;
-    std::string const & get_theme() const;
-    uint64_t const get_id() const;
-    connections const get_connections() const;
-    bool const is_permutateable() const;
-    bool const is_entrance() const;
-    bool const is_exit() const;
-    bool const is_flippable() const;
-
-private:
-    std::string name;
-    std::string theme;
-    uint64_t id;
-    struct connections
-    {
         uint32_t T0 : 1;
         uint32_t T1 : 1;
         uint32_t T2 : 1;
@@ -66,12 +40,33 @@ private:
         uint32_t L5 : 1;
         uint32_t L6 : 1;
         uint32_t L7 : 1;
-    };
+}D_Connections;
+
+class D_Tile
+{
+public:
+    D_Tile(std::string path);
+    ~D_Tile();
+    static void load_tiles(std::string dir_path);
+    std::string const & get_name() const;
+    std::string const & get_theme() const;
+    uint64_t const get_id() const;
+    D_Connections const get_connections() const;
+    bool const is_permutateable() const;
+    bool const is_entrance() const;
+    bool const is_exit() const;
+    bool const is_flippable() const;
+
+private:
+    std::string name;
+    std::string theme;
+    uint64_t id;
+    D_Connections connections;
     bool is_permutateable_flag;
     bool is_entrance_flag;
     bool is_exit_flag;
     bool is_flippable_flag;
 
     D_Tile();
-    static inline std::shared_ptr<D_Tile> permutate(std::shared_ptr<D_Tile> permutateable);
+    static inline std::vector<std::shared_ptr<D_Tile>> permutate(std::shared_ptr<D_Tile> permutateable);
 };

@@ -3,8 +3,10 @@
 #include <memory>
 #include <cstdint>
 #include <unordered_map>
+#include <vector>
 
 #include "d_tile.hpp"
+#include "d_builder_common.hpp"
 
 #define MAX_PERMUTATIONS (3)
 #define MAX_FLIPPABLE_PERMUTATIONS (7)
@@ -19,10 +21,7 @@ D_Tile::~D_Tile()
     //! TODO: This
 }
 
-void D_Tile::load_tiles(std::string dir_path,
-                        std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> tiles,
-                        std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> entrances,
-                        std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> exits)
+void D_Tile::load_tiles(std::string dir_path)
 {
     //! TODO: This
 }
@@ -42,7 +41,7 @@ uint64_t const D_Tile::get_id() const
     //! TODO: This
 }
 
-connections const D_Tile::get_connections() const
+D_Connections const D_Tile::get_connections() const
 {
     //! TODO: This
 }
@@ -72,7 +71,7 @@ D_Tile::D_Tile()
     //! TODO: This
 }
 
-inline std::shared_ptr<D_Tile> D_Tile::permutate(std::shared_ptr<D_Tile> permutateable)
+inline std::vector<std::shared_ptr<D_Tile>> D_Tile::permutate(std::shared_ptr<D_Tile> permutateable)
 {
     //! TODO: This
 }
