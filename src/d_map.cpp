@@ -37,3 +37,8 @@ void D_Map::swap_tile(uint8_t col, uint8_t row, std::shared_ptr<D_Tile> replacem
 {
     //! TODO: this
 }
+
+std::string const to_string() const
+{
+    //! TODO: this
+}

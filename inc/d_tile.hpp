@@ -56,6 +56,7 @@ public:
     bool const is_entrance() const;
     bool const is_exit() const;
     bool const is_flippable() const;
+    std::string const to_string() const;
 
 private:
     std::string name;

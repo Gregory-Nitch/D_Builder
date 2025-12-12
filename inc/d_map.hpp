@@ -16,6 +16,7 @@ public:
     void generate();
     void save(std::string path, std::string file_name) const;
     void swap_tile(uint8_t col, uint8_t row, std::shared_ptr<D_Tile> replacement);
+    std::string const to_string() const;
 
 private:
     std::vector<std::vector<std::shared_ptr<D_Tile>>> display_mat;

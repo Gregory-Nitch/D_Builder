@@ -9,3 +9,4 @@ Desktop TTRPG dungeon builder
 
 ## 3rd Party Libs
 - Planning on using Qt (QGraphicsView Framework)
+- And maybe an SQLite db later on
