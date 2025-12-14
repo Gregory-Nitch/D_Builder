@@ -1,4 +1,20 @@
+/***********************************************************************************************************************
+ * LICENSE : TODO!
+ *
+ * @date : 2025-12-14
+ * @author : Gregory Nitch
+ *
+ * @brief : Header for the D_Tile class, it represents a section that can be used to construct the D_Map display matrix.
+ * For documentation for each function @see d_tile.cpp.
+ **********************************************************************************************************************/
+
 #pragma once
+
+/*
+========================================================================================================================
+- - System Includes - -
+========================================================================================================================
+*/
 
 #include <string>
 #include <memory>
@@ -8,14 +24,40 @@
 #include <filesystem>
 #include <atomic>
 
+/*
+========================================================================================================================
+- - Start of D_Tile Class - -
+========================================================================================================================
+*/
+
+// Forward declare
 typedef union D_Connections;
 
+/***********************************************************************************************************************
+ * @class D_Tile
+ * @brief Represents a possbile section in the D_Map object.
+ *
+ * @members :
+ *      @private std::filesystem::path path = Path to the actual image.
+ *      @private std::string name = Name of the section.
+ *      @private std::string theme = Theme of the section.
+ *      @private uint64_t id = ID of the section.
+ *      @private D_Connections connections = Connection bit map of the tile connections.
+ *      @private bool is_permutateable_flag = Whether or not the tile is permutable.
+ *      @private bool is_entrance_flag = Whether or not the tile is an entrance.
+ *      @private bool is_exit_flag = Whether or not the tile is an exit.
+ *      @private bool is_flippable_flag = Whether or not the tile is flippable.
+ *
+ *      //! NOTE: May be replaced later with id set by a database.
+ *      @private static std::atomic<uint64_t> id_counter = Static class varible used to assign IDs to loaded and generate tiles.
+ **********************************************************************************************************************/
 class D_Tile
 {
 public:
     D_Tile(std::filesystem::path const &path);
     ~D_Tile();
     static void load_tiles(std::filesystem::directory_entry const &dir_path);
+    static void generate_tiles(std::filesystem::directory_entry const &dir_path);
     std::string const &get_name() const;
     std::string const &get_theme() const;
     uint64_t const get_id() const;
@@ -27,6 +69,7 @@ public:
     std::string const to_string() const;
 
 private:
+    std::filesystem::path path;
     std::string name;
     std::string theme;
     uint64_t id;
@@ -39,7 +82,8 @@ private:
     //! NOTE: May be replaced later with id set by a database.
     static std::atomic<uint64_t> id_counter;
 
-    D_Tile(std::string permutation_name,
+    D_Tile(std::filesystem::path permutaion_path,
+           std::string permutation_name,
            std::string permutation_theme,
            uint64_t permutation_id,
            D_Connections permutation_connections,
@@ -48,9 +92,25 @@ private:
            bool permutation_is_permutable_flag,
            bool permutation_is_flippable_flag);
     inline void map_connection_tokens(std::vector<std::string> connection_tokens);
-    static inline std::vector<std::shared_ptr<D_Tile>> permutate(std::shared_ptr<D_Tile> permutateable);
+    static inline void permutate(std::shared_ptr<D_Tile> permutateable);
+    inline std::string const to_filename();
+    void generate_tile_img();
 };
 
+/*
+========================================================================================================================
+- - Start of D_Connection Union - -
+========================================================================================================================
+*/
+
+/***********************************************************************************************************************
+ * @union D_Connections
+ * @brief Represents connections that each tile can have, in a uint32_t.
+ *
+ * @members :
+ *      @public bits = Each indivitual unit32_t bit. T0-L7 (clockwise)
+ *      @public mask = The entire uint32_t to use as a complete mask over the bits.
+ **********************************************************************************************************************/
 union D_Connections
 {
     struct
@@ -99,6 +159,9 @@ union D_Connections
     uint32_t mask;
 };
 
+/***********************************************************************************************************************
+ * @brief Map of valid connection strings to bits in the D_Connection union.
+ **********************************************************************************************************************/
 std::unordered_map<std::string, uint32_t> const Connection_Str_to_Bit_Mask_Map = {
     // Top bits 0-7
     {"T0", 1},
@@ -138,6 +201,9 @@ std::unordered_map<std::string, uint32_t> const Connection_Str_to_Bit_Mask_Map =
     {"L7", (1 << 31)},
 };
 
+/***********************************************************************************************************************
+ * @brief Map of valid bits to connection strings in the D_Connection union.
+ **********************************************************************************************************************/
 std::unordered_map<uint32_t, std::string> const Connection_Bit_Mask_to_Str_Map = {
     // Top bits 0-7
     {1, "T0"},
