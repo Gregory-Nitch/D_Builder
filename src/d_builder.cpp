@@ -46,11 +46,12 @@ std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Exit_Map = {};
 int main(int argc, char **argv)
 {
     //! TODO: Need to init below variable.
-    std::filesystem::directory_entry img_dir;
+    std::filesystem::path img_dir(DEFAULT_INPUT_IMG_PATH);
 
     std::cout << "Welcome to D_Builder" << std::endl;
 
     D_Tile::load_tiles(img_dir);
+    D_Tile::generate_tiles();
 
     return EXIT_SUCCESS;
 }

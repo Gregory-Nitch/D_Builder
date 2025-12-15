@@ -32,7 +32,13 @@
 /***********************************************************************************************************************
  * @brief Default input image path for the application, tiles are expected to be placed in this directory.
  **********************************************************************************************************************/
-#define DEFAULT_INPUT_IMG_PATH "../imgs/input"
+#define DEFAULT_INPUT_IMG_PATH "./imgs/input"
+
+/***********************************************************************************************************************
+ * @brief Default D_Tile loaded path for the application, tiles are expected to move and save here on application start
+ * and when new tiles have been generated.
+ **********************************************************************************************************************/
+#define DEFAULT_SECTION_IMG_LOADED_PATH "./imgs/loaded"
 
 /***********************************************************************************************************************
  * @brief Produces a std::format from the passed error message. Adds filename, function name, line and an ERR

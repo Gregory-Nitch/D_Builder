@@ -22,6 +22,7 @@
 #include <sstream>
 #include <iostream>
 #include <exception>
+#include <bit>
 
 /*
 ========================================================================================================================
@@ -88,13 +89,19 @@
 
 /***********************************************************************************************************************
  * @brief Initial mask given to a tile before mapping its connection to bits, also given to tiles with no connections.
+ * all bits are set to zero.
  **********************************************************************************************************************/
-#define CONNECTION_INIT_MASK (0x0)
+#define CONNECTION_ZERO_MASK (0x0)
 
 /***********************************************************************************************************************
  * @brief Expected string when parsing a tile that has no connections.
  **********************************************************************************************************************/
 #define NA_CONNECTION_TOKEN ("NA")
+
+/***********************************************************************************************************************
+ * @brief Number of connections that every tile will have on one side, used when rotating connections.
+ **********************************************************************************************************************/
+#define TILE_SIDE_CONNECTION_SIZE (8)
 
 /*
 ========================================================================================================================
@@ -158,8 +165,10 @@ D_Tile::D_Tile(std::filesystem::path const &in_path)
         throw std::invalid_argument(ERR_FORMAT("Tile name found to be empty at end of D_Tile()!"));
     if (theme.empty())
         throw std::invalid_argument(ERR_FORMAT("Tile theme found to be empty at end of D_Tile!"));
-    if (is_entrance_flag && is_exit_flag)
+    if (is_entrance() && is_exit())
         throw std::invalid_argument(ERR_FORMAT("A tile cannot be both an entrance and an exit!"));
+    if (is_flippable() && !is_permutateable())
+        throw std::invalid_argument(ERR_FORMAT("A tile cannot be flippable and not be permutateable!"));
 }
 
 /**
@@ -176,20 +185,84 @@ D_Tile::~D_Tile()
  * @note Does not generate permutations in the global maps, if that is required call generate_tiles. Doing so will also
  * create images for the application to use.
  */
-void D_Tile::load_tiles(std::filesystem::directory_entry const &dir_path)
+void D_Tile::load_tiles(std::filesystem::path const &dir_path)
 {
-    //! TODO: This
+    if (dir_path.empty())
+        std::invalid_argument(ERR_FORMAT("Given empty path to loading function"));
+
+    size_t tile_count = 0;
+    std::vector<std::shared_ptr<D_Tile>> tiles;
+    for (auto &const dir_entry : std::filesystem::directory_iterator{dir_path})
+    {
+        if (dir_entry.is_directory())
+            continue;
+        tile_count++;
+    }
+
+    size_t entrance_count = 0;
+    size_t exit_count = 0;
+    Tile_Map.reserve(tile_count);
+    tiles.reserve(tile_count);
+    for (auto &const dir_entry : std::filesystem::directory_iterator{dir_path})
+    {
+        if (dir_entry.is_directory())
+            continue;
+        std::shared_ptr<D_Tile> tile = std::make_shared<D_Tile>(dir_entry.path());
+        tiles.push_back(tile);
+
+        if (tile->is_entrance())
+            entrance_count++;
+        if (tile->is_exit())
+            exit_count++;
+    }
+
+    Entrance_Map.reserve(entrance_count);
+    Exit_Map.reserve(exit_count);
+    for (auto tile : tiles)
+    {
+        tile->generate_tile_img();
+        std::pair<uint64_t, std::shared_ptr<D_Tile>> tile_pair = {tile->id, tile};
+        auto emplace_pair = Tile_Map.emplace(tile_pair);
+        if (!emplace_pair.second)
+            throw std::runtime_error(ERR_FORMAT("Failed placing a tile in the Tile_Map during loading!"));
+
+        if (tile->is_entrance())
+        {
+            emplace_pair = Entrance_Map.emplace(tile_pair);
+            if (!emplace_pair.second)
+                throw std::runtime_error(ERR_FORMAT("Failed placing a tile in the Entrance_Map during loading!"));
+        }
+
+        if (tile->is_exit())
+        {
+            emplace_pair = Exit_Map.emplace(tile_pair);
+            if (!emplace_pair.second)
+                throw std::runtime_error(ERR_FORMAT("Failed placing a tile in the Exit_Map during loading!"));
+        }
+
+        LOG_DEBUG(std::format("{}:{}", "Loaded Tile:", tile->to_string()));
+    }
 }
 
 /**
  * @brief Generates tiles from the D_Tiles loaded in load_tiles(), this will also create permutation images of
  * permutable tiles and save them.
- * @param dir_path Directory path to save permutated D_Tile images into.
  * @note Generates permutations in the global maps.
+ * @throws std::runtime_error if it encoutners a nullptr in the Tile_Map.
  */
-void D_Tile::generate_tiles(std::filesystem::directory_entry const &dir_path)
+void D_Tile::generate_tiles()
 {
-    //! TODO: This
+    // For each tile in global check for permutables
+    for (auto pair : Tile_Map)
+    {
+        std::shared_ptr<D_Tile> tile = pair.second;
+        if (nullptr != tile && tile->is_permutateable())
+        {
+            permutate(tile);
+        }
+        else if (nullptr == tile)
+            throw std::runtime_error(ERR_FORMAT("Found nullptr in tile global map!"));
+    }
 }
 
 /**
@@ -283,13 +356,13 @@ std::string const D_Tile::to_string() const
     }
 
     ss << ",Entrance:";
-    is_entrance_flag ? ss << "is entrance" : ss << "not entrance";
+    is_entrance() ? ss << "is entrance" : ss << "not entrance";
     ss << ",Exit:";
-    is_exit_flag ? ss << "is exit" : ss << "not exit";
+    is_exit() ? ss << "is exit" : ss << "not exit";
     ss << ",Permutable:";
-    is_permutateable_flag ? ss << "is permutable" : ss << "not permutable";
+    is_permutateable() ? ss << "is permutable" : ss << "not permutable";
     ss << ",Flippable:";
-    is_flippable_flag ? ss << "is flippable" : ss << "not flippable";
+    is_flippable() ? ss << "is flippable" : ss << "not flippable";
 
     return ss.str();
 }
@@ -303,8 +376,7 @@ std::string const D_Tile::to_string() const
 /**
  * @brief Private constructor to build new D_Tile objects from permutaion values.
  */
-D_Tile::D_Tile(std::filesystem::path permutation_path,
-               std::string permutation_name,
+D_Tile::D_Tile(std::string permutation_name,
                std::string permutation_theme,
                uint64_t permutation_id,
                D_Connections permutation_connections,
@@ -324,7 +396,6 @@ D_Tile::D_Tile(std::filesystem::path permutation_path,
         throw std::invalid_argument(ERR_FORMAT(err));
     }
 
-    path = permutation_path;
     name = permutation_name;
     theme = permutation_theme;
     id = permutation_id;
@@ -342,7 +413,7 @@ D_Tile::D_Tile(std::filesystem::path permutation_path,
  */
 inline void D_Tile::map_connection_tokens(std::vector<std::string> connection_tokens)
 {
-    connections.mask = CONNECTION_INIT_MASK;
+    connections.mask = CONNECTION_ZERO_MASK;
     // If we have NA, then the tile has no connections.
     for (std::string connection : connection_tokens)
         if (connection.compare(NA_CONNECTION_TOKEN))
@@ -376,7 +447,119 @@ inline void D_Tile::map_connection_tokens(std::vector<std::string> connection_to
  */
 inline void D_Tile::permutate(std::shared_ptr<D_Tile> permutateable)
 {
-    //! TODO: This
+    if (nullptr == permutateable)
+        throw std::invalid_argument(ERR_FORMAT("Encoutnered a nullptr while trying to permutate a tile!"));
+
+    std::vector<std::shared_ptr<D_Tile>> permutations;
+    size_t entrance_count = 0;
+    size_t exit_count = 0;
+
+    if (permutateable->is_flippable())
+    {
+        permutations.reserve(MAX_FLIPPABLE_PERMUTATIONS);
+        if (permutateable->is_entrance())
+            entrance_count = MAX_FLIPPABLE_PERMUTATIONS;
+        if (permutateable->is_exit())
+            exit_count = MAX_FLIPPABLE_PERMUTATIONS;
+    }
+    else
+    {
+        permutations.reserve(MAX_PERMUTATIONS);
+        if (permutateable->is_entrance())
+            entrance_count = MAX_PERMUTATIONS;
+        if (permutateable->is_exit())
+            exit_count = MAX_PERMUTATIONS;
+    }
+
+    // Create new tiles
+    for (size_t idx = 0; idx < MAX_PERMUTATIONS; idx++)
+    {
+        D_Connections rotated_connections = rotate_connections(static_cast<Connection_Rotations>(idx), permutateable->connections);
+        std::shared_ptr<D_Tile> tile = std::make_shared<D_Tile>(
+            permutateable->name,
+            permutateable->theme,
+            id_counter.fetch_add(1),
+            rotated_connections,
+            tile->is_entrance(),
+            tile->is_exit(),
+            false, // Permutations are not permutatable,
+            false  // nor are they flippable.
+        );
+
+        std::string filename = tile->to_filename();
+        tile->path = std::filesystem::path(std::format("{}/{}", DEFAULT_SECTION_IMG_LOADED_PATH, filename));
+        permutations.push_back(tile);
+    }
+
+    // If we need to flip and continue do so
+    if (permutateable->is_flippable())
+    {
+        // Flip once
+        D_Connections flipped_connections = flip_connections(permutateable->connections);
+        std::shared_ptr<D_Tile> flipped = std::make_shared<D_Tile>(
+            permutateable->name,
+            permutateable->theme,
+            id_counter.fetch_add(1),
+            flipped_connections,
+            permutateable->is_entrance(),
+            permutateable->is_exit(),
+            false, // Permutations are not permutable
+            false  //  nor are they flippable.
+        );
+
+        std::string filename = flipped->to_filename();
+        flipped->path = std::filesystem::path(std::format("{}/{}", DEFAULT_SECTION_IMG_LOADED_PATH, filename));
+        permutations.push_back(flipped);
+
+        // And rotate
+        for (size_t idx = 0; idx < MAX_PERMUTATIONS; idx++)
+        {
+            D_Connections rotated_connections = rotate_connections(static_cast<Connection_Rotations>(idx), permutateable->connections);
+            std::shared_ptr<D_Tile> tile = std::make_shared<D_Tile>(
+                permutateable->name,
+                permutateable->theme,
+                id_counter.fetch_add(1),
+                rotated_connections,
+                tile->is_entrance(),
+                tile->is_exit(),
+                false, // Permutations are not permutable
+                false  //  nor are they flippable.
+            );
+
+            std::string filename = tile->to_filename();
+            tile->path = std::filesystem::path(std::format("{}/{}", DEFAULT_SECTION_IMG_LOADED_PATH, filename));
+            permutations.push_back(flipped);
+        }
+    }
+
+    // Generate images and load them to the global map.
+    Tile_Map.reserve(Tile_Map.size() + permutations.size());
+    Entrance_Map.reserve(Entrance_Map.size() + entrance_count);
+    Exit_Map.reserve(Exit_Map.size() + exit_count);
+    for (auto tile : permutations)
+    {
+        tile->generate_tile_img();
+        std::pair<uint64_t, std::shared_ptr<D_Tile>> tile_pair = {tile->id, tile};
+        auto emplace_pair = Tile_Map.emplace(tile_pair);
+        if (!emplace_pair.second)
+            throw std::runtime_error(ERR_FORMAT("Failed placing a permutation in the Tile_Map during permutation!"));
+
+        if (tile->is_entrance())
+        {
+            emplace_pair = Entrance_Map.emplace(tile_pair);
+            if (!emplace_pair.second)
+                throw std::runtime_error(ERR_FORMAT("Failed placing a permutation in the Entrance_Map during permutation!"));
+        }
+
+        if (tile->is_exit())
+        {
+            emplace_pair = Exit_Map.emplace(tile_pair);
+            if (!emplace_pair.second)
+                throw std::runtime_error(ERR_FORMAT("Failed placing a permutation in the Exit_Map during permutation!"));
+        }
+
+        LOG_DEBUG(std::format("{}:{}", "Permutated Tile:", tile->to_string()));
+    }
 }
 
 /**
@@ -411,10 +594,12 @@ inline std::string const D_Tile::to_filename()
     }
 
     // Stream the remaining attributes.
-    is_entrance_flag ? ss << "true;" : ss << "false;";
-    is_exit_flag ? ss << "true;" : ss << "false;";
-    is_permutateable_flag ? ss << "true;" : ss << "false;";
-    is_flippable_flag ? ss << "true" : ss << "false"; // Last part of the filename has no semicolon.
+    is_entrance() ? ss << "true;" : ss << "false;";
+    is_exit() ? ss << "true;" : ss << "false;";
+    is_permutateable() ? ss << "true;" : ss << "false;";
+    is_flippable() ? ss << "true" : ss << "false"; // Last part of the filename has no semicolon.
+
+    ss << ".jpg";
 
     return ss.str();
 }
@@ -425,4 +610,43 @@ inline std::string const D_Tile::to_filename()
 void D_Tile::generate_tile_img()
 {
     //! TODO: This
+}
+
+/***********************************************************************************************************************
+ * @brief Rotates connections for a given connection bitmap according to a rotation enum value.
+ * @param[in] rotation Connection_Rotations enum denoting the amount that the connections should be rotated.
+ * @param[in] to_rotate The connections to rotate.
+ * @retval D_Connections The connections after rotated.
+ **********************************************************************************************************************/
+inline D_Connections D_Tile::rotate_connections(Connection_Rotations rotation, D_Connections to_rotate)
+{
+    uint8_t shift_amount = (static_cast<uint8_t>(rotation) * TILE_SIDE_CONNECTION_SIZE) % UINT32_WIDTH;
+    if (0 == shift_amount)
+        throw std::runtime_error(ERR_FORMAT("Shift amount durring rotation was 0!"));
+
+    return {.mask = std::rotl(to_rotate.mask, shift_amount)};
+}
+
+/***********************************************************************************************************************
+ * @brief Flips connections for a given D_Connection union.
+ * @param[in] to_flip Connections to flip.
+ * @retval D_Connections The passed connections flipped horizontally, ie left becomes right and right becomes left, top
+ * and bottom are mirrored.
+ **********************************************************************************************************************/
+inline D_Connections D_Tile::flip_connections(D_Connections to_flip)
+{
+    // Swap left and right masks
+    D_Connections out = {.mask = CONNECTION_ZERO_MASK};
+    out.side_masks.left = to_flip.side_masks.right;
+    out.side_masks.right = to_flip.side_masks.left;
+
+    // Top and Bottom masks need to be reversed, extract the bit with i and shift by j.
+    for (size_t i = 0, j = UINT8_WIDTH - 1; i < UINT8_WIDTH; i++, j--)
+    {
+        if (UINT8_WIDTH < j)
+            throw std::runtime_error(ERR_FORMAT("While flipping connections we were going to write outside of the uint8_t bit width!"));
+
+        out.side_masks.top |= ((to_flip.side_masks.top >> i) & 1u) << j;
+        out.side_masks.bottom |= ((to_flip.side_masks.bottom >> i) & 1u) << j;
+    }
 }

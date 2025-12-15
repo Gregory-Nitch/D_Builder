@@ -32,6 +32,7 @@
 
 // Forward declare
 typedef union D_Connections;
+typedef enum Connection_Rotations;
 
 /***********************************************************************************************************************
  * @class D_Tile
@@ -56,8 +57,8 @@ class D_Tile
 public:
     D_Tile(std::filesystem::path const &path);
     ~D_Tile();
-    static void load_tiles(std::filesystem::directory_entry const &dir_path);
-    static void generate_tiles(std::filesystem::directory_entry const &dir_path);
+    static void load_tiles(std::filesystem::path const &dir_path);
+    static void generate_tiles();
     std::string const &get_name() const;
     std::string const &get_theme() const;
     uint64_t const get_id() const;
@@ -82,8 +83,7 @@ private:
     //! NOTE: May be replaced later with id set by a database.
     static std::atomic<uint64_t> id_counter;
 
-    D_Tile(std::filesystem::path permutaion_path,
-           std::string permutation_name,
+    D_Tile(std::string permutation_name,
            std::string permutation_theme,
            uint64_t permutation_id,
            D_Connections permutation_connections,
@@ -95,6 +95,8 @@ private:
     static inline void permutate(std::shared_ptr<D_Tile> permutateable);
     inline std::string const to_filename();
     void generate_tile_img();
+    static inline D_Connections rotate_connections(Connection_Rotations rotation, D_Connections to_rotate);
+    static inline D_Connections flip_connections(D_Connections to_flip);
 };
 
 /*
@@ -109,6 +111,7 @@ private:
  *
  * @members :
  *      @public bits = Each indivitual unit32_t bit. T0-L7 (clockwise)
+ *      @public side_masks = each side as a uint8_mask.
  *      @public mask = The entire uint32_t to use as a complete mask over the bits.
  **********************************************************************************************************************/
 union D_Connections
@@ -155,6 +158,14 @@ union D_Connections
         uint32_t L6 : 1;
         uint32_t L7 : 1;
     } bits;
+
+    struct
+    {
+        uint8_t top;
+        uint8_t right;
+        uint8_t bottom;
+        uint8_t left;
+    } side_masks;
 
     uint32_t mask;
 };
@@ -241,4 +252,20 @@ std::unordered_map<uint32_t, std::string> const Connection_Bit_Mask_to_Str_Map =
     {(1 << 29), "L5"},
     {(1 << 30), "L6"},
     {(1 << 31), "L7"},
+};
+
+/***********************************************************************************************************************
+ * @enum Connection_Rotations
+ * @brief Represents the different rotation degrees when permutating a tile.
+ *
+ * @remarks Values:
+ *      Nintey = 1, // Start from one for bit shifting operations
+ *      One_Eighty = 2,
+ *      Two_Seventy = 3,
+ **********************************************************************************************************************/
+enum class Connection_Rotations
+{
+    Nintey = 1,
+    One_Eighty = 2,
+    Two_Seventy = 3,
 };
