@@ -45,3 +45,7 @@
 
 #Build folder
 .bld
+
+#Images other than input
+.imgs/loaded
+.imgs/output

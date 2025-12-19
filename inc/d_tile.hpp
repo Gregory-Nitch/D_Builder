@@ -95,6 +95,7 @@ private:
     static inline void permutate(std::shared_ptr<D_Tile> permutateable);
     inline std::string const to_filename();
     void generate_tile_img();
+    void copy_tile_img();
     static inline D_Connections rotate_connections(Connection_Rotations rotation, D_Connections to_rotate);
     static inline D_Connections flip_connections(D_Connections to_flip);
 };

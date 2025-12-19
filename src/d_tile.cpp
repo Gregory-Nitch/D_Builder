@@ -208,6 +208,7 @@ void D_Tile::load_tiles(std::filesystem::path const &dir_path)
         if (dir_entry.is_directory())
             continue;
         std::shared_ptr<D_Tile> tile = std::make_shared<D_Tile>(dir_entry.path());
+        tile->copy_tile_img();
         tiles.push_back(tile);
 
         if (tile->is_entrance())
@@ -447,8 +448,13 @@ inline void D_Tile::map_connection_tokens(std::vector<std::string> connection_to
  */
 inline void D_Tile::permutate(std::shared_ptr<D_Tile> permutateable)
 {
+    /*! TODO: We need to check the connection masks of each permutation in the case of symetrical tiles where less than
+     *    the normal amount of rotations will produce all of the unique permutations. ie we need to vet 'permutations' for
+     *  duplicates!
+     */
+
     if (nullptr == permutateable)
-        throw std::invalid_argument(ERR_FORMAT("Encoutnered a nullptr while trying to permutate a tile!"));
+        throw std::invalid_argument(ERR_FORMAT("Encountered a nullptr while trying to permutate a tile!"));
 
     std::vector<std::shared_ptr<D_Tile>> permutations;
     size_t entrance_count = 0;
@@ -604,10 +610,19 @@ inline std::string const D_Tile::to_filename()
     return ss.str();
 }
 
-/**
+/***********************************************************************************************************************
  * @brief Creates an image for a D_Tile and saves it at the object's path member.
- */
+ **********************************************************************************************************************/
 void D_Tile::generate_tile_img()
+{
+    //! TODO: This
+}
+
+/***********************************************************************************************************************
+ * @brief Copies an image for a D_Tile from the input folder to the loaded folder, this then udpates the tiles path
+ * member.
+ **********************************************************************************************************************/
+void D_Tile::copy_tile_img()
 {
     //! TODO: This
 }

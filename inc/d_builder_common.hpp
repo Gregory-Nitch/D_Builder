@@ -41,6 +41,11 @@
 #define DEFAULT_SECTION_IMG_LOADED_PATH "./imgs/loaded"
 
 /***********************************************************************************************************************
+ * @brief Default D_Map output path for the application, maps will be saved to this directory when requested.
+ **********************************************************************************************************************/
+#define DEFAULT_OUTPUT_IMG_PATH "./imgs/output"
+
+/***********************************************************************************************************************
  * @brief Produces a std::format from the passed error message. Adds filename, function name, line and an ERR
  * identifier.
  * @param msg Message to be formated into the string.
@@ -78,4 +83,7 @@ extern std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Entrance_Map;
  **********************************************************************************************************************/
 extern std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Exit_Map;
 
+/***********************************************************************************************************************
+ * @brief Global dungeon map for the application, will be used to keep track of what should be displayed in the GUI.
+ **********************************************************************************************************************/
 extern std::unique_ptr<D_Tile> Dungeon_Map;
