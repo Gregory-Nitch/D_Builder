@@ -33,7 +33,7 @@
 */
 
 /***********************************************************************************************************************
- * @brief Max map size in both width and hieght, ie. 20x20.
+ * @brief Max map size in both width and height, ie. 20x20.
  **********************************************************************************************************************/
 #define MAX_MAP_SIZE (20)
 
@@ -43,9 +43,12 @@
 ========================================================================================================================
 */
 
-D_Map::D_Map(uint8_t cols, uint8_t rows)
+D_Map::D_Map(uint8_t in_cols, uint8_t in_rows, std::string in_theme)
 {
-    //! TODO: this
+    cols = in_cols;
+    rows = in_rows;
+    theme = in_theme;
+    generate();
 }
 
 D_Map::~D_Map()
@@ -56,6 +59,27 @@ D_Map::~D_Map()
 void D_Map::generate()
 {
     //! TODO: this
+    // resize our display matrix
+    // get a new map of tiles filtered by theme
+    // randomly pick an entrance
+    // protect entrance
+    // randomly decide if we want an exit
+    // if has exit, randomly pick it
+    // test if the exit is reachable
+    //   if not error
+    // protect exit
+    // randomly pick seeds and protect them
+    // randomly fill in the map connecting to every tile unless its a seed with no connections.
+    // test that every tile is reachable
+    //   if not error
+}
+
+void D_Map::generate(uint8_t in_col, uint8_t in_row, std::string theme)
+{
+    cols = in_cols;
+    rows = in_rows;
+    theme = in_theme;
+    generate();
 }
 
 void D_Map::save(std::string path, std::string file_name) const
@@ -75,7 +99,5 @@ std::string const D_Map::to_string() const
 
 std::vector<std::vector<std::shared_ptr<D_Tile>>> const & D_Map::get_display_mat()
 {
-    //! TODO: this
+    return display_mat;
 }
-
-

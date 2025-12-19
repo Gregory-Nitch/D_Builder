@@ -45,9 +45,10 @@
 class D_Map
 {
 public:
-    D_Map(uint8_t cols, uint8_t rows);
+    D_Map(uint8_t in_cols, uint8_t in_rows, std::string in_theme);
     ~D_Map();
     void generate();
+    void generate(uint8_t in_cols, uint8_t in_rows, std::string theme);
     void save(std::string path, std::string file_name) const;
     void swap_tile(uint8_t col, uint8_t row, std::shared_ptr<D_Tile> replacement);
     std::string const to_string() const;

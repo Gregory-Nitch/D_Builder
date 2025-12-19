@@ -77,3 +77,5 @@ extern std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Entrance_Map;
  * shared with the Tile_Map global variable.
  **********************************************************************************************************************/
 extern std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Exit_Map;
+
+extern std::unique_ptr<D_Tile> Dungeon_Map;
