@@ -53,11 +53,6 @@ D_Map::~D_Map()
     //! TODO: this
 }
 
-bool const D_Map::has_exit() const
-{
-    return has_exit_flag;
-}
-
 void D_Map::generate()
 {
     //! TODO: this
@@ -77,3 +72,10 @@ std::string const D_Map::to_string() const
 {
     //! TODO: this
 }
+
+std::vector<std::vector<std::shared_ptr<D_Tile>>> const & D_Map::get_display_mat()
+{
+    //! TODO: this
+}
+
+
