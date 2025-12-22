@@ -29,6 +29,9 @@
 ========================================================================================================================
 */
 
+//! TODO: dox
+#define DEFAULT_BASE_IMG_PATH "./imgs"
+
 /***********************************************************************************************************************
  * @brief Default input image path for the application, tiles are expected to be placed in this directory.
  **********************************************************************************************************************/
@@ -87,3 +90,7 @@ extern std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Exit_Map;
  * @brief Global dungeon map for the application, will be used to keep track of what should be displayed in the GUI.
  **********************************************************************************************************************/
 extern std::unique_ptr<D_Tile> Dungeon_Map;
+
+//! TODO: docsec
+
+void init_img_dirs(void);

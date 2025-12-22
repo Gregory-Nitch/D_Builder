@@ -46,7 +46,7 @@ std::unique_ptr<D_Map> Dungeon_Map = nullptr;
 
 int main(int argc, char **argv)
 {
-    //! TODO: Need to init below variable.
+    init_img_dirs();
     std::filesystem::path img_dir(DEFAULT_INPUT_IMG_PATH);
 
     std::cout << "Welcome to D_Builder" << std::endl;
