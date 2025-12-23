@@ -624,7 +624,22 @@ void D_Tile::generate_tile_img()
  **********************************************************************************************************************/
 void D_Tile::copy_tile_img()
 {
-    //! TODO: This
+    std::filesystem::path loaded_dir(DEFAULT_SECTION_IMG_LOADED_PATH);
+    std::filesystem::path input_dir(DEFAULT_INPUT_IMG_PATH);
+    std::stringstream ss(loaded_dir.string());
+    ss << path.filename();
+    std::filesystem::path new_path = ss.str();
+
+    try
+    {
+        std::filesystem::copy(path, new_path, std::filesystem::copy_options::overwite_existing);
+    }
+    catch (std::filesystem::filesystem_error &fs_e)
+    {
+        std::stringstream err("Unable to copy tile image. Filesystem error was: ");
+        err << fs_e.what();
+        throw std::runtime_error(ERR_FORMAT(err.str()));
+    }
 }
 
 /***********************************************************************************************************************
