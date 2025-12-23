@@ -13,6 +13,7 @@
 - - Sysytem Includes - -
 ========================================================================================================================
 */
+
 #include <string>
 #include <memory>
 #include <cstdint>
@@ -29,6 +30,7 @@
 - - Local Includes - -
 ========================================================================================================================
 */
+
 #include "d_tile.hpp"
 #include "d_builder_common.hpp"
 
@@ -37,6 +39,7 @@
 - - Macros - -
 ========================================================================================================================
 */
+
 /***********************************************************************************************************************
  * @brief Max possible permutations of a tile that is not flippable.
  **********************************************************************************************************************/
@@ -109,19 +112,23 @@
 ========================================================================================================================
 */
 
-/**
+/***********************************************************************************************************************
  * @brief Constructor for a Dungeon Tile.
+ *
  * @param[in] in_path Path to the image file.
+ *
  * @warning This image file name must be in the following format:
  * name;theme;connections,with,comma,separated,values;is_entrance;is_exit;is_permutateable;is_flippable
  * For example:
  * 3WayInter0;fort;T3,T4,R3,R4,B3,B4;false;false;true;false
  * Additionally, this image is expected to permutate, it should have top connections as it will be the base image that
  * all permutations will be made from.
+ *
  * @note If there are no connections that section of the filename, it should have NA placed there.
+ *
  * @throws std::invalid_argument if in_path filename is empty, if name member ends up empty, if theme member ends up
  * empty, or if it is labeled as both an entrance and an exit.
- */
+ **********************************************************************************************************************/
 D_Tile::D_Tile(std::filesystem::path const &in_path)
 {
     if (in_path.filename().generic_string().empty())
@@ -171,20 +178,22 @@ D_Tile::D_Tile(std::filesystem::path const &in_path)
         throw std::invalid_argument(ERR_FORMAT("A tile cannot be flippable and not be permutateable!"));
 }
 
-/**
+/***********************************************************************************************************************
  * @brief Destructor.
- */
+ **********************************************************************************************************************/
 D_Tile::~D_Tile()
 {
     //! TODO: This?
 }
 
-/**
+/***********************************************************************************************************************
  * @brief Loads all the tiles from a given directory.
+ *
  * @param dir_path Directory path to a group of images to load.
+ *
  * @note Does not generate permutations in the global maps, if that is required call generate_tiles. Doing so will also
  * create images for the application to use.
- */
+ **********************************************************************************************************************/
 void D_Tile::load_tiles(std::filesystem::path const &dir_path)
 {
     if (dir_path.empty())
@@ -245,12 +254,14 @@ void D_Tile::load_tiles(std::filesystem::path const &dir_path)
     }
 }
 
-/**
+/***********************************************************************************************************************
  * @brief Generates tiles from the D_Tiles loaded in load_tiles(), this will also create permutation images of
  * permutable tiles and save them.
+ *
  * @note Generates permutations in the global maps.
+ *
  * @throws std::runtime_error if it encoutners a nullptr in the Tile_Map.
- */
+ **********************************************************************************************************************/
 void D_Tile::generate_tiles()
 {
     // For each tile in global check for permutables
@@ -266,85 +277,96 @@ void D_Tile::generate_tiles()
     }
 }
 
-/**
+/***********************************************************************************************************************
  * @brief Gets the name of the tile.
+ *
  * @returns Name of the tile.
- */
+ **********************************************************************************************************************/
 std::string const &D_Tile::get_name() const
 {
     return name;
 }
 
-/**
+/***********************************************************************************************************************
  * @brief Gets the theme of the tile.
+ *
  * @returns Theme of the tile.
- */
+ **********************************************************************************************************************/
 std::string const &D_Tile::get_theme() const
 {
     return theme;
 }
 
-/**
+/***********************************************************************************************************************
  * @brief Gets the ID of the tile.
+ *
  * @returns ID of the tile.
- */
+ **********************************************************************************************************************/
 uint64_t const D_Tile::get_id() const
 {
     return id;
 }
 
-/**
+/***********************************************************************************************************************
  * @brief Gets the connection bit map of the tile.
+ *
  * @returns Connection bit map of the tile.
- */
+ **********************************************************************************************************************/
 D_Connections const D_Tile::get_connections() const
 {
     return connections;
 }
 
-/**
+/***********************************************************************************************************************
  * @brief Gets the permutable flag of the tile.
+ *
  * @returns Whether or not the tile is permutable of the tile.
+ *
  * @note Tiles that were made from permutable tiles are not permutable.
- */
+ **********************************************************************************************************************/
 bool const D_Tile::is_permutateable() const
 {
     return is_permutateable_flag;
 }
 
-/**
+/***********************************************************************************************************************
  * @brief Gets the entrance flag of the tile.
+ *
  * @returns Whether or not the tile is an entrance tile.
- */
+ **********************************************************************************************************************/
 bool const D_Tile::is_entrance() const
 {
     return is_entrance_flag;
 }
 
-/**
+/***********************************************************************************************************************
  * @brief Gets the exit flag of the tile.
+ *
  * @returns Whether or not the tile is an exit tile.
- */
+ **********************************************************************************************************************/
 bool const D_Tile::is_exit() const
 {
     return is_exit_flag;
 }
 
-/**
+/***********************************************************************************************************************
  * @brief Gets the flippable flag of the tile.
+ *
  * @returns Whether or not the tile is flippable.
+ *
  * @note Tiles made from flippable tiles are not set as flippable themselves after their creation.
- */
+ **********************************************************************************************************************/
 bool const D_Tile::is_flippable() const
 {
     return is_flippable_flag;
 }
 
-/**
+/***********************************************************************************************************************
  * @brief Outputs the tile information string form.
+ *
  * @returns The tile information as a string in the form of:
  * ID:<id>,Name:<name>,Theme:<theme>,Connections:<connections,>,Entrance:<flag>,Exit:<flag>,Permutable:<flag>,Flippable:<flag>
- */
+ **********************************************************************************************************************/
 std::string const D_Tile::to_string() const
 {
     std::stringstream ss;
@@ -374,9 +396,9 @@ std::string const D_Tile::to_string() const
 ========================================================================================================================
 */
 
-/**
+/***********************************************************************************************************************
  * @brief Private constructor to build new D_Tile objects from permutaion values.
- */
+ **********************************************************************************************************************/
 D_Tile::D_Tile(std::string permutation_name,
                std::string permutation_theme,
                uint64_t permutation_id,
@@ -407,11 +429,13 @@ D_Tile::D_Tile(std::string permutation_name,
     is_flippable_flag = permutation_is_flippable_flag;
 }
 
-/**
+/***********************************************************************************************************************
  * @brief Maps the connection tokens used in the public constructor to bits in the connection bit map.
+ *
  * @param[in] connection_tokens Connection tokens read from the filename.
+ *
  * @throws std::invalid_argument on an empty vector.
- */
+ **********************************************************************************************************************/
 inline void D_Tile::map_connection_tokens(std::vector<std::string> connection_tokens)
 {
     connections.mask = CONNECTION_ZERO_MASK;
@@ -439,13 +463,16 @@ inline void D_Tile::map_connection_tokens(std::vector<std::string> connection_to
     throw std::invalid_argument(ERR_FORMAT(err));
 }
 
-/**
+/***********************************************************************************************************************
  * @brief Creates permutations of the given D_Tile and places shared_ptr references in the global tile maps.
+ *
  * @param[in] permutable The D_Tile to permutate.
+ *
  * @returns A vector of shared_ptrs to the passed D_Tile's permutations, these will tiles will have already been loaded
  * into the global maps but are returned for easy iteration when generating their images.
+ *
  * @throws std::invalid_argument a nullptr.
- */
+ **********************************************************************************************************************/
 inline void D_Tile::permutate(std::shared_ptr<D_Tile> permutateable)
 {
     /*! TODO: We need to check the connection masks of each permutation in the case of symetrical tiles where less than
@@ -568,13 +595,14 @@ inline void D_Tile::permutate(std::shared_ptr<D_Tile> permutateable)
     }
 }
 
-/**
+/***********************************************************************************************************************
  * @brief Outputs a string to name a new generated tile.
+ *
  * @note This image filename is in the following format:
  * name;theme;connections,with,comma,separated,values;is_entrance;is_exit;is_permutateable;is_flippable
  * For example:
  * 3WayInter0;fort;T3,T4,R3,R4,B3,B4;false;false;true;false
- */
+ **********************************************************************************************************************/
 inline std::string const D_Tile::to_filename()
 {
     std::stringstream ss;
@@ -644,8 +672,10 @@ void D_Tile::copy_tile_img()
 
 /***********************************************************************************************************************
  * @brief Rotates connections for a given connection bitmap according to a rotation enum value.
+ *
  * @param[in] rotation Connection_Rotations enum denoting the amount that the connections should be rotated.
  * @param[in] to_rotate The connections to rotate.
+ *
  * @retval D_Connections The connections after rotated.
  **********************************************************************************************************************/
 inline D_Connections D_Tile::rotate_connections(Connection_Rotations rotation, D_Connections to_rotate)
@@ -659,7 +689,9 @@ inline D_Connections D_Tile::rotate_connections(Connection_Rotations rotation, D
 
 /***********************************************************************************************************************
  * @brief Flips connections for a given D_Connection union.
+ *
  * @param[in] to_flip Connections to flip.
+ *
  * @retval D_Connections The passed connections flipped horizontally, ie left becomes right and right becomes left, top
  * and bottom are mirrored.
  **********************************************************************************************************************/
