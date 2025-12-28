@@ -17,6 +17,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <format>
 
 /*
 ========================================================================================================================
@@ -74,7 +75,7 @@ void D_Map::generate()
     //   if not error
 }
 
-void D_Map::generate(uint8_t in_col, uint8_t in_row, std::string theme)
+void D_Map::generate(uint8_t in_cols, uint8_t in_rows, std::string in_theme)
 {
     cols = in_cols;
     rows = in_rows;
@@ -95,9 +96,10 @@ void D_Map::swap_tile(uint8_t col, uint8_t row, std::shared_ptr<D_Tile> replacem
 std::string const D_Map::to_string() const
 {
     //! TODO: this
+    return "";
 }
 
-std::vector<std::vector<std::shared_ptr<D_Tile>>> const & D_Map::get_display_mat()
+std::vector<std::vector<std::shared_ptr<D_Tile>>> const &D_Map::get_display_mat()
 {
     return display_mat;
 }

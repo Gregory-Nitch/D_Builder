@@ -44,8 +44,8 @@
 .vscode
 
 #Build folder
-.bld
+bld/
 
 #Images other than input
-.imgs/loaded
-.imgs/output
+imgs/loaded
+imgs/output

@@ -24,6 +24,7 @@
 #include <iostream>
 #include <exception>
 #include <bit>
+#include <format>
 
 /*
 ========================================================================================================================
@@ -105,6 +106,10 @@
  * @brief Number of connections that every tile will have on one side, used when rotating connections.
  **********************************************************************************************************************/
 #define TILE_SIDE_CONNECTION_SIZE (8)
+
+//! NOTE: May be replaced later with id set by a database.
+//! TODO: dox
+std::atomic<uint64_t> D_Tile::id_counter{0};
 
 /*
 ========================================================================================================================
@@ -201,7 +206,7 @@ void D_Tile::load_tiles(std::filesystem::path const &dir_path)
 
     size_t tile_count = 0;
     std::vector<std::shared_ptr<D_Tile>> tiles;
-    for (auto &const dir_entry : std::filesystem::directory_iterator{dir_path})
+    for (std::filesystem::directory_entry const dir_entry : std::filesystem::directory_iterator{dir_path})
     {
         if (dir_entry.is_directory())
             continue;
@@ -212,7 +217,7 @@ void D_Tile::load_tiles(std::filesystem::path const &dir_path)
     size_t exit_count = 0;
     Tile_Map.reserve(tile_count);
     tiles.reserve(tile_count);
-    for (auto &const dir_entry : std::filesystem::directory_iterator{dir_path})
+    for (std::filesystem::directory_entry const dir_entry : std::filesystem::directory_iterator{dir_path})
     {
         if (dir_entry.is_directory())
             continue;
@@ -508,7 +513,7 @@ inline void D_Tile::permutate(std::shared_ptr<D_Tile> permutateable)
     for (size_t idx = 0; idx < MAX_PERMUTATIONS; idx++)
     {
         D_Connections rotated_connections = rotate_connections(static_cast<Connection_Rotations>(idx), permutateable->connections);
-        std::shared_ptr<D_Tile> tile = std::make_shared<D_Tile>(
+        std::shared_ptr<D_Tile> tile(new D_Tile(
             permutateable->name,
             permutateable->theme,
             id_counter.fetch_add(1),
@@ -517,7 +522,7 @@ inline void D_Tile::permutate(std::shared_ptr<D_Tile> permutateable)
             tile->is_exit(),
             false, // Permutations are not permutatable,
             false  // nor are they flippable.
-        );
+            ));
 
         std::string filename = tile->to_filename();
         tile->path = std::filesystem::path(std::format("{}/{}", DEFAULT_SECTION_IMG_LOADED_PATH, filename));
@@ -529,7 +534,7 @@ inline void D_Tile::permutate(std::shared_ptr<D_Tile> permutateable)
     {
         // Flip once
         D_Connections flipped_connections = flip_connections(permutateable->connections);
-        std::shared_ptr<D_Tile> flipped = std::make_shared<D_Tile>(
+        std::shared_ptr<D_Tile> flipped(new D_Tile(
             permutateable->name,
             permutateable->theme,
             id_counter.fetch_add(1),
@@ -538,7 +543,7 @@ inline void D_Tile::permutate(std::shared_ptr<D_Tile> permutateable)
             permutateable->is_exit(),
             false, // Permutations are not permutable
             false  //  nor are they flippable.
-        );
+            ));
 
         std::string filename = flipped->to_filename();
         flipped->path = std::filesystem::path(std::format("{}/{}", DEFAULT_SECTION_IMG_LOADED_PATH, filename));
@@ -548,7 +553,7 @@ inline void D_Tile::permutate(std::shared_ptr<D_Tile> permutateable)
         for (size_t idx = 0; idx < MAX_PERMUTATIONS; idx++)
         {
             D_Connections rotated_connections = rotate_connections(static_cast<Connection_Rotations>(idx), permutateable->connections);
-            std::shared_ptr<D_Tile> tile = std::make_shared<D_Tile>(
+            std::shared_ptr<D_Tile> tile(new D_Tile(
                 permutateable->name,
                 permutateable->theme,
                 id_counter.fetch_add(1),
@@ -557,7 +562,7 @@ inline void D_Tile::permutate(std::shared_ptr<D_Tile> permutateable)
                 tile->is_exit(),
                 false, // Permutations are not permutable
                 false  //  nor are they flippable.
-            );
+                ));
 
             std::string filename = tile->to_filename();
             tile->path = std::filesystem::path(std::format("{}/{}", DEFAULT_SECTION_IMG_LOADED_PATH, filename));
@@ -660,7 +665,7 @@ void D_Tile::copy_tile_img()
 
     try
     {
-        std::filesystem::copy(path, new_path, std::filesystem::copy_options::overwite_existing);
+        std::filesystem::copy(path, new_path, std::filesystem::copy_options::overwrite_existing);
     }
     catch (std::filesystem::filesystem_error &fs_e)
     {
@@ -711,4 +716,6 @@ inline D_Connections D_Tile::flip_connections(D_Connections to_flip)
         out.side_masks.top |= ((to_flip.side_masks.top >> i) & 1u) << j;
         out.side_masks.bottom |= ((to_flip.side_masks.bottom >> i) & 1u) << j;
     }
+
+    return out;
 }
