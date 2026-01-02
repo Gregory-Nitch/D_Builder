@@ -21,11 +21,39 @@
 #include <cstdint>
 #include <unordered_map>
 #include <vector>
+#include <array>
 #include <filesystem>
 #include <atomic>
 
-// Forward declare
-enum class Connection_Rotations;
+/*
+========================================================================================================================
+- - Start of Connection_Rotations Enum - -
+========================================================================================================================
+*/
+
+/***********************************************************************************************************************
+ * @enum Connection_Rotations
+ * @brief Represents the different rotation degrees when permutating a tile.
+ *
+ * @remarks Values:
+ *      Nintey = 1, // Start from one for bit shifting operations
+ *      One_Eighty = 2,
+ *      Two_Seventy = 3,
+ **********************************************************************************************************************/
+enum class Connection_Rotations
+{
+    Nintey = 1,
+    One_Eighty = 2,
+    Two_Seventy = 3,
+};
+
+/***********************************************************************************************************************
+ * @brief An array of the Connection_Rotation enums used for iteration.
+ **********************************************************************************************************************/
+constexpr std::array<Connection_Rotations, 3> ROTATION_ARR = {
+    Connection_Rotations::Nintey,
+    Connection_Rotations::One_Eighty,
+    Connection_Rotations::Two_Seventy};
 
 /*
 ========================================================================================================================
@@ -96,78 +124,6 @@ union D_Connections
     } side_masks;
 
     uint32_t mask;
-};
-
-/*
-========================================================================================================================
-- - Start of D_Tile Class - -
-========================================================================================================================
-*/
-
-/***********************************************************************************************************************
- * @class D_Tile
- * @brief Represents a possbile section in the D_Map object.
- *
- * @members :
- *      @private std::filesystem::path path = Path to the actual image.
- *      @private std::string name = Name of the section.
- *      @private std::string theme = Theme of the section.
- *      @private uint64_t id = ID of the section.
- *      @private D_Connections connections = Connection bit map of the tile connections.
- *      @private bool is_permutateable_flag = Whether or not the tile is permutable.
- *      @private bool is_entrance_flag = Whether or not the tile is an entrance.
- *      @private bool is_exit_flag = Whether or not the tile is an exit.
- *      @private bool is_flippable_flag = Whether or not the tile is flippable.
- *
- *      //! NOTE: May be replaced later with id set by a database.
- *      @private static std::atomic<uint64_t> id_counter = Static class varible used to assign IDs to loaded and generate tiles.
- **********************************************************************************************************************/
-class D_Tile
-{
-public:
-    D_Tile(std::filesystem::path const &path);
-    ~D_Tile();
-    static void load_tiles(std::filesystem::path const &dir_path);
-    static void generate_tiles();
-    std::string const &get_name() const;
-    std::string const &get_theme() const;
-    uint64_t const get_id() const;
-    D_Connections const get_connections() const;
-    bool const is_permutateable() const;
-    bool const is_entrance() const;
-    bool const is_exit() const;
-    bool const is_flippable() const;
-    std::string const to_string() const;
-
-private:
-    std::filesystem::path path;
-    std::string name;
-    std::string theme;
-    uint64_t id;
-    D_Connections connections;
-    bool is_permutateable_flag;
-    bool is_entrance_flag;
-    bool is_exit_flag;
-    bool is_flippable_flag;
-
-    //! NOTE: May be replaced later with id set by a database.
-    static std::atomic<uint64_t> id_counter;
-
-    D_Tile(std::string permutation_name,
-           std::string permutation_theme,
-           uint64_t permutation_id,
-           D_Connections permutation_connections,
-           bool permutation_is_entrance_flag,
-           bool permutation_is_exit_flag,
-           bool permutation_is_permutable_flag,
-           bool permutation_is_flippable_flag);
-    inline void map_connection_tokens(std::vector<std::string> connection_tokens);
-    static inline void permutate(std::shared_ptr<D_Tile> permutateable);
-    inline std::string const to_filename();
-    void generate_tile_img();
-    void copy_tile_img();
-    static inline D_Connections rotate_connections(Connection_Rotations rotation, D_Connections to_rotate);
-    static inline D_Connections flip_connections(D_Connections to_flip);
 };
 
 /***********************************************************************************************************************
@@ -254,18 +210,77 @@ std::unordered_map<uint32_t, std::string> const Connection_Bit_Mask_to_Str_Map =
     {(1 << 31), "L7"},
 };
 
+/*
+========================================================================================================================
+- - Start of D_Tile Class - -
+========================================================================================================================
+*/
+
 /***********************************************************************************************************************
- * @enum Connection_Rotations
- * @brief Represents the different rotation degrees when permutating a tile.
+ * @class D_Tile
+ * @brief Represents a possbile section in the D_Map object.
  *
- * @remarks Values:
- *      Nintey = 1, // Start from one for bit shifting operations
- *      One_Eighty = 2,
- *      Two_Seventy = 3,
+ * @members :
+ *      @private std::filesystem::path path = Path to the actual image.
+ *      @private std::string name = Name of the section.
+ *      @private std::string theme = Theme of the section.
+ *      @private uint64_t id = ID of the section.
+ *      @private D_Connections connections = Connection bit map of the tile connections.
+ *      @private bool is_permutateable_flag = Whether or not the tile is permutable.
+ *      @private bool is_entrance_flag = Whether or not the tile is an entrance.
+ *      @private bool is_exit_flag = Whether or not the tile is an exit.
+ *      @private bool is_flippable_flag = Whether or not the tile is flippable.
+ *
+ *      //! NOTE: May be replaced later with id set by a database.
+ *      @private static std::atomic<uint64_t> id_counter = Static class varible used to assign IDs to loaded and generate tiles.
  **********************************************************************************************************************/
-enum class Connection_Rotations
+class D_Tile
 {
-    Nintey = 1,
-    One_Eighty = 2,
-    Two_Seventy = 3,
+public:
+    D_Tile(std::filesystem::path const &path);
+    ~D_Tile();
+    static void load_tiles(std::filesystem::path const &dir_path, std::filesystem::path const &loaded_path = "");
+    static void generate_tiles();
+    std::string const &get_name() const;
+    std::string const &get_theme() const;
+    uint64_t const get_id() const;
+    D_Connections const get_connections() const;
+    bool const is_permutateable() const;
+    bool const is_entrance() const;
+    bool const is_exit() const;
+    bool const is_flippable() const;
+    std::string const to_string() const;
+
+private:
+    std::filesystem::path path;
+    std::string name;
+    std::string theme;
+    uint64_t id;
+    D_Connections connections;
+    bool is_permutateable_flag;
+    bool is_entrance_flag;
+    bool is_exit_flag;
+    bool is_flippable_flag;
+
+    //! NOTE: May be replaced later with id set by a database.
+    static std::atomic<uint64_t> id_counter;
+
+    D_Tile(std::string permutation_name,
+           std::string permutation_theme,
+           uint64_t permutation_id,
+           D_Connections permutation_connections,
+           bool permutation_is_entrance_flag,
+           bool permutation_is_exit_flag,
+           bool permutation_is_permutable_flag,
+           bool permutation_is_flippable_flag);
+    inline void map_connection_tokens(std::vector<std::string> connection_tokens);
+    static inline void permutate(std::shared_ptr<D_Tile> permutateable,
+                                 std::vector<std::shared_ptr<D_Tile>> &permutations,
+                                 size_t &entrance_count,
+                                 size_t &exit_count);
+    inline std::string const to_filename();
+    void generate_tile_img();
+    void copy_tile_img(std::filesystem::path loaded_dir);
+    static inline D_Connections rotate_connections(Connection_Rotations rotation, D_Connections to_rotate);
+    static inline D_Connections flip_connections(D_Connections to_flip);
 };

@@ -39,23 +39,23 @@
 */
 
 //! TODO: dox
-#define DEFAULT_BASE_IMG_PATH "./imgs"
+#define DEFAULT_BASE_IMG_PATH "./imgs/"
 
 /***********************************************************************************************************************
  * @brief Default input image path for the application, tiles are expected to be placed in this directory.
  **********************************************************************************************************************/
-#define DEFAULT_INPUT_IMG_PATH "./imgs/input"
+#define DEFAULT_INPUT_IMG_PATH "./imgs/input/"
 
 /***********************************************************************************************************************
  * @brief Default D_Tile loaded path for the application, tiles are expected to move and save here on application start
  * and when new tiles have been generated.
  **********************************************************************************************************************/
-#define DEFAULT_SECTION_IMG_LOADED_PATH "./imgs/loaded"
+#define DEFAULT_SECTION_IMG_LOADED_PATH "./imgs/loaded/"
 
 /***********************************************************************************************************************
  * @brief Default D_Map output path for the application, maps will be saved to this directory when requested.
  **********************************************************************************************************************/
-#define DEFAULT_OUTPUT_IMG_PATH "./imgs/output"
+#define DEFAULT_OUTPUT_IMG_PATH "./imgs/output/"
 
 /***********************************************************************************************************************
  * @brief Produces a std::format from the passed error message. Adds filename, function name, line and an ERR
@@ -100,6 +100,10 @@ extern std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Exit_Map;
  **********************************************************************************************************************/
 extern std::unique_ptr<D_Map> Dungeon_Map;
 
-//! TODO: docsec
+/***********************************************************************************************************************
+ * @brief TODO.
+ **********************************************************************************************************************/
+extern std::string Gen_Flag;
 
+//! TODO: docsec
 void init_img_dirs(void);

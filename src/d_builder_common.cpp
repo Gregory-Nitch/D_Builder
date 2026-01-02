@@ -20,7 +20,8 @@ void init_img_dirs(void)
     {
         std::filesystem::create_directories(base_img_path);
         std::filesystem::create_directories(input_path);
-        std::stringstream ss("Required image input directories are missing! I've created them for you but you still have no images in ");
+        std::stringstream ss;
+        ss << "Required image input directories are missing! I've created them for you but you still have no images in ";
         ss << DEFAULT_INPUT_IMG_PATH;
         ss << '!';
         throw std::runtime_error(ERR_FORMAT(ss.str()));
@@ -28,7 +29,8 @@ void init_img_dirs(void)
 
     if (std::filesystem::is_empty(input_path))
     {
-        std::stringstream ss("Image input directory is empty! You'll need to add images too ");
+        std::stringstream ss;
+        ss << "Image input directory is empty! You'll need to add images too ";
         ss << DEFAULT_INPUT_IMG_PATH;
         ss << '!';
         throw std::runtime_error(ERR_FORMAT(ss.str()));
