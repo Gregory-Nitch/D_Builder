@@ -122,8 +122,11 @@
  **********************************************************************************************************************/
 #define TILE_SIDE_CONNECTION_SIZE (8)
 
-//! NOTE: May be replaced later with id set by a database.
-//! TODO: dox
+/***********************************************************************************************************************
+ * @brief Global id counter for D_Tile objects.
+ *
+ * @note May be replaced later with id set by a database.
+ **********************************************************************************************************************/
 std::atomic<uint64_t> D_Tile::id_counter{0};
 
 /*
@@ -470,13 +473,21 @@ bool const D_Tile::is_flippable() const
     return is_flippable_flag;
 }
 
-//! TODO: dox
+/***********************************************************************************************************************
+ * @brief Gets the flipped status of the tile, if the tile was flipped during permutation this will return true.
+ *
+ * @retval bool Whether or not the tile has been flipped.
+ **********************************************************************************************************************/
 bool const D_Tile::is_flipped() const
 {
     return is_flipped_flag;
 }
 
-//! TODO: dox
+/***********************************************************************************************************************
+ * @brief Gets the amount of rotation used to produce the permutated image. Original images will be set to Zero.
+ *
+ * @retval Connection_Rotations enum value to the amount the image needed to be rotated to produce the permutation.
+ **********************************************************************************************************************/
 Connection_Rotations const D_Tile::get_rotation_amount() const
 {
     return rotation_amount;
@@ -607,16 +618,15 @@ inline void D_Tile::permutate(std::shared_ptr<D_Tile> permutateable,
                               std::vector<std::shared_ptr<D_Tile>> &permutations,
                               size_t &entrance_count,
                               size_t &exit_count)
-{
-    /*! TODO: We need to check the connection masks of each permutation in the case of symetrical tiles where less than
-     * the normal amount of rotations will produce all of the unique permutations. ie we need to vet 'permutations' for
-     * duplicates!
-     *
-     * We may also be able to move tile rotation processing into another function for refactoring.
-     */
-
+{ //! TODO:We may be able to move tile rotation processing into another function for refactoring.
     if (nullptr == permutateable)
         throw std::invalid_argument(ERR_FORMAT("Encountered a nullptr while trying to permutate a tile!"));
+
+    size_t permutation_limiter = ROTATION_ARR.size();
+    if (permutateable->connections.mask == rotate_connections(Connection_Rotations::One_Eighty, permutateable->connections).mask)
+    {
+        permutation_limiter = ROTATION_ARR.size() - 2;
+    }
 
     std::stringstream ss;
     ss << "Permutating Tile:" << permutateable->to_string();
@@ -640,9 +650,9 @@ inline void D_Tile::permutate(std::shared_ptr<D_Tile> permutateable,
     }
 
     // Create new tiles
-    for (Connection_Rotations rotation : ROTATION_ARR)
+    for (size_t idx = 0; idx < permutation_limiter; idx++)
     {
-        D_Connections rotated_connections = rotate_connections(rotation, permutateable->connections);
+        D_Connections rotated_connections = rotate_connections(ROTATION_ARR[idx], permutateable->connections);
         std::shared_ptr<D_Tile> tile(new D_Tile(
             permutateable->name,
             permutateable->theme,
@@ -654,7 +664,7 @@ inline void D_Tile::permutate(std::shared_ptr<D_Tile> permutateable,
             false  // nor are they flippable.
             ));
 
-        tile->rotation_amount = rotation;
+        tile->rotation_amount = ROTATION_ARR[idx];
         std::string filename = tile->to_filename();
         tile->path = std::filesystem::path(std::format("{}/{}", permutateable->path.parent_path().generic_string(), filename));
         tile->image = std::make_unique<QImage>(*permutateable->image);
@@ -684,9 +694,9 @@ inline void D_Tile::permutate(std::shared_ptr<D_Tile> permutateable,
         permutations.push_back(flipped);
 
         // And rotate
-        for (Connection_Rotations rotation : ROTATION_ARR)
+        for (size_t idx = 0; idx < permutation_limiter; idx++)
         {
-            D_Connections rotated_connections = rotate_connections(rotation, flipped->connections);
+            D_Connections rotated_connections = rotate_connections(ROTATION_ARR[idx], flipped->connections);
             std::shared_ptr<D_Tile> tile(new D_Tile(
                 permutateable->name,
                 permutateable->theme,
@@ -699,7 +709,7 @@ inline void D_Tile::permutate(std::shared_ptr<D_Tile> permutateable,
                 ));
 
             tile->is_flipped_flag = true;
-            tile->rotation_amount = rotation;
+            tile->rotation_amount = ROTATION_ARR[idx];
             std::string filename = tile->to_filename();
             tile->path = std::filesystem::path(std::format("{}/{}", permutateable->path.parent_path().generic_string(), filename));
             tile->image = std::make_unique<QImage>(*permutateable->image);
