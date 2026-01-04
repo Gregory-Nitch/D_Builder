@@ -18,6 +18,24 @@ target_sources(D_Builder
 
 target_include_directories(D_Builder PRIVATE inc/)
 
+# Qt stuff
+if(NOT CMAKE_PREFIX_PATH)
+    message(STATUS "Using default Qt path...")
+    set(CMAKE_PREFIX_PATH "~/0-Main/0-Repos/Qt/6.10.1/gcc_64")
+else()
+    message(STATUS "Using passed Qt path...")
+endif()
+
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTORCC ON)
+
+find_package(Qt6 COMPONENTS Gui REQUIRED)
+
+target_link_libraries(D_Builder
+    PRIVATE
+    Qt6::Gui
+)
 
 # Compile options
 if(CMAKE_BUILD_TYPE STREQUAL "debug")

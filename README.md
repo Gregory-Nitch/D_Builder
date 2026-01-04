@@ -8,5 +8,9 @@ Desktop TTRPG dungeon builder
 - Map merged images saving.
 
 ## 3rd Party Libs
-- Planning on using Qt (QGraphicsView Framework)
-- And maybe an SQLite db later on
+- Qt 6.10.1
+- OpenGL (For Qt)
+- - Ubuntu : `sudo apt install libgl1-mesa-dev libglu1-mesa-dev freeglut3-dev mesa-common-dev`
+- Vulkan (For Qt)
+- - Ubuntu : `sudo apt install libvulkan-dev`
+- maybe SQLite later on

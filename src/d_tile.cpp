@@ -28,6 +28,16 @@
 
 /*
 ========================================================================================================================
+- - 3rd Party Includes - -
+========================================================================================================================
+*/
+
+#include <QImage>
+#include <QTransform>
+#include <QString>
+
+/*
+========================================================================================================================
 - - Local Includes - -
 ========================================================================================================================
 */
@@ -224,7 +234,8 @@ D_Tile::~D_Tile()
 }
 
 /***********************************************************************************************************************
- * @brief Loads all the tiles from a given directory.
+ * @brief Loads all the tiles from a given directory, places them in the global map and then loads the acutal images as
+ * QImages for each tile.
  *
  * @param dir_path Directory path to a group of images to load.
  * @param loaded_path Directory path to move the loaded images too. Defaults to an empty path incase we have already
@@ -267,6 +278,8 @@ void D_Tile::load_tiles(std::filesystem::path const &dir_path, std::filesystem::
         {
             tile->copy_tile_img(loaded_path);
         }
+        //! NOTE: We only load the tile image after we have ensured it is in the proper directory.
+        tile->image = std::make_unique<QImage>(QString::fromStdString(tile->path.generic_string()));
         tiles.push_back(tile);
 
         if (tile->is_entrance())
@@ -340,6 +353,7 @@ void D_Tile::generate_tiles()
         << " Exit count:" << exit_count << " [Tile]:";
     for (auto tile : permutations)
     {
+        //! TODO: vvv (generate_tile_img()) Move image gen out of the loop and use multiple threads for faster processing?
         tile->generate_tile_img();
         std::pair<uint64_t, std::shared_ptr<D_Tile>> tile_pair = {tile->id, tile};
         auto emplace_pair = Tile_Map.emplace(tile_pair);
@@ -456,6 +470,18 @@ bool const D_Tile::is_flippable() const
     return is_flippable_flag;
 }
 
+//! TODO: dox
+bool const D_Tile::is_flipped() const
+{
+    return is_flipped_flag;
+}
+
+//! TODO: dox
+Connection_Rotations const D_Tile::get_rotation_amount() const
+{
+    return rotation_amount;
+}
+
 /***********************************************************************************************************************
  * @brief Outputs the tile information string form.
  *
@@ -481,6 +507,9 @@ std::string const D_Tile::to_string() const
     is_permutateable() ? ss << "is permutable" : ss << "not permutable";
     ss << ",Flippable:";
     is_flippable() ? ss << "is flippable" : ss << "not flippable";
+    ss << ",Flipped Tile:";
+    is_flipped() ? ss << "is flipped" : ss << "is not flipped";
+    ss << "Rotation:" << static_cast<uint8_t>(get_rotation_amount());
 
     return ss.str();
 }
@@ -574,11 +603,16 @@ inline void D_Tile::map_connection_tokens(std::vector<std::string> connection_to
  *
  * @throws std::invalid_argument a nullptr.
  **********************************************************************************************************************/
-inline void D_Tile::permutate(std::shared_ptr<D_Tile> permutateable, std::vector<std::shared_ptr<D_Tile>> &permutations, size_t &entrance_count, size_t &exit_count)
+inline void D_Tile::permutate(std::shared_ptr<D_Tile> permutateable,
+                              std::vector<std::shared_ptr<D_Tile>> &permutations,
+                              size_t &entrance_count,
+                              size_t &exit_count)
 {
     /*! TODO: We need to check the connection masks of each permutation in the case of symetrical tiles where less than
-     *    the normal amount of rotations will produce all of the unique permutations. ie we need to vet 'permutations' for
-     *  duplicates!
+     * the normal amount of rotations will produce all of the unique permutations. ie we need to vet 'permutations' for
+     * duplicates!
+     *
+     * We may also be able to move tile rotation processing into another function for refactoring.
      */
 
     if (nullptr == permutateable)
@@ -620,8 +654,10 @@ inline void D_Tile::permutate(std::shared_ptr<D_Tile> permutateable, std::vector
             false  // nor are they flippable.
             ));
 
+        tile->rotation_amount = rotation;
         std::string filename = tile->to_filename();
-        tile->path = std::filesystem::path(std::format("{}/{}", DEFAULT_SECTION_IMG_LOADED_PATH, filename));
+        tile->path = std::filesystem::path(std::format("{}/{}", permutateable->path.parent_path().generic_string(), filename));
+        tile->image = std::make_unique<QImage>(*permutateable->image);
         permutations.push_back(tile);
     }
 
@@ -641,14 +677,16 @@ inline void D_Tile::permutate(std::shared_ptr<D_Tile> permutateable, std::vector
             false  //  nor are they flippable.
             ));
 
+        flipped->is_flipped_flag = true;
         std::string filename = flipped->to_filename();
-        flipped->path = std::filesystem::path(std::format("{}/{}", DEFAULT_SECTION_IMG_LOADED_PATH, filename));
+        flipped->path = std::filesystem::path(std::format("{}/{}", permutateable->path.parent_path().generic_string(), filename));
+        flipped->image = std::make_unique<QImage>(*permutateable->image);
         permutations.push_back(flipped);
 
         // And rotate
         for (Connection_Rotations rotation : ROTATION_ARR)
         {
-            D_Connections rotated_connections = rotate_connections(rotation, permutateable->connections);
+            D_Connections rotated_connections = rotate_connections(rotation, flipped->connections);
             std::shared_ptr<D_Tile> tile(new D_Tile(
                 permutateable->name,
                 permutateable->theme,
@@ -660,8 +698,11 @@ inline void D_Tile::permutate(std::shared_ptr<D_Tile> permutateable, std::vector
                 false  //  nor are they flippable.
                 ));
 
+            tile->is_flipped_flag = true;
+            tile->rotation_amount = rotation;
             std::string filename = tile->to_filename();
-            tile->path = std::filesystem::path(std::format("{}/{}", DEFAULT_SECTION_IMG_LOADED_PATH, filename));
+            tile->path = std::filesystem::path(std::format("{}/{}", permutateable->path.parent_path().generic_string(), filename));
+            tile->image = std::make_unique<QImage>(*permutateable->image);
             permutations.push_back(tile);
         }
     }
@@ -711,11 +752,44 @@ inline std::string const D_Tile::to_filename()
 }
 
 /***********************************************************************************************************************
- * @brief Creates an image for a D_Tile and saves it at the object's path member.
+ * @brief Creates an image for a D_Tile and saves it at the instances's path member.
  **********************************************************************************************************************/
 void D_Tile::generate_tile_img()
 {
-    //! TODO: This
+    if (!image || image->isNull())
+        throw std::invalid_argument(ERR_FORMAT("Null image reference found when generating a tile image!"));
+
+    QTransform matrix;
+    size_t degrees = 0;
+
+    if (is_flipped())
+        image->flip(Qt::Horizontal);
+
+    switch (rotation_amount)
+    {
+    case Connection_Rotations::Nintey:
+        degrees = 90;
+        break;
+
+    case Connection_Rotations::One_Eighty:
+        degrees = 180;
+        break;
+
+    case Connection_Rotations::Two_Seventy:
+        degrees = 270;
+        break;
+
+    default: // No Rotation required.
+        break;
+    }
+
+    if (0 != degrees)
+    {
+        matrix.rotate(degrees);
+        *image = image->transformed(matrix);
+    }
+
+    image->save(QString::fromStdString(path.generic_string()));
 }
 
 /***********************************************************************************************************************

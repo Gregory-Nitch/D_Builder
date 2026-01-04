@@ -38,7 +38,7 @@ std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Tile_Map = {};
 std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Entrance_Map = {};
 std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Exit_Map = {};
 std::unique_ptr<D_Map> Dungeon_Map = nullptr;
-std::string Gen_Flag = "generate";
+std::string Gen_Flag = GENERATE_IMG_CLI_COMMAND;
 
 /*
 ========================================================================================================================

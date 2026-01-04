@@ -27,6 +27,14 @@
 
 /*
 ========================================================================================================================
+- - Local Includes - -
+========================================================================================================================
+*/
+
+#include <QImage>
+
+/*
+========================================================================================================================
 - - Start of Connection_Rotations Enum - -
 ========================================================================================================================
 */
@@ -42,6 +50,7 @@
  **********************************************************************************************************************/
 enum class Connection_Rotations
 {
+    Zero = 0,
     Nintey = 1,
     One_Eighty = 2,
     Two_Seventy = 3,
@@ -49,6 +58,7 @@ enum class Connection_Rotations
 
 /***********************************************************************************************************************
  * @brief An array of the Connection_Rotation enums used for iteration.
+ * @note Zero is left out of this array.
  **********************************************************************************************************************/
 constexpr std::array<Connection_Rotations, 3> ROTATION_ARR = {
     Connection_Rotations::Nintey,
@@ -221,6 +231,7 @@ std::unordered_map<uint32_t, std::string> const Connection_Bit_Mask_to_Str_Map =
  * @brief Represents a possbile section in the D_Map object.
  *
  * @members :
+ *      @private QImage The actual image object used for the tile instance.
  *      @private std::filesystem::path path = Path to the actual image.
  *      @private std::string name = Name of the section.
  *      @private std::string theme = Theme of the section.
@@ -230,6 +241,10 @@ std::unordered_map<uint32_t, std::string> const Connection_Bit_Mask_to_Str_Map =
  *      @private bool is_entrance_flag = Whether or not the tile is an entrance.
  *      @private bool is_exit_flag = Whether or not the tile is an exit.
  *      @private bool is_flippable_flag = Whether or not the tile is flippable.
+ *      @private bool is_flipped = Whether or not this tile was generated via a flipped tile permutation.
+ *      @private Connection_Rotations rotation_amount = The amount that this tile's image needs to be rotated when
+ *               generating its image. @note This is set to zero for tiles that have not been permutated or those that
+ *               have been flipped.
  *
  *      //! NOTE: May be replaced later with id set by a database.
  *      @private static std::atomic<uint64_t> id_counter = Static class varible used to assign IDs to loaded and generate tiles.
@@ -249,9 +264,12 @@ public:
     bool const is_entrance() const;
     bool const is_exit() const;
     bool const is_flippable() const;
+    bool const is_flipped() const;
+    Connection_Rotations const get_rotation_amount() const;
     std::string const to_string() const;
 
 private:
+    std::unique_ptr<QImage> image = nullptr;
     std::filesystem::path path;
     std::string name;
     std::string theme;
@@ -261,6 +279,8 @@ private:
     bool is_entrance_flag;
     bool is_exit_flag;
     bool is_flippable_flag;
+    bool is_flipped_flag = false;
+    Connection_Rotations rotation_amount = Connection_Rotations::Zero;
 
     //! NOTE: May be replaced later with id set by a database.
     static std::atomic<uint64_t> id_counter;
