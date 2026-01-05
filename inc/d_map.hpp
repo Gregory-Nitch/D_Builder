@@ -20,6 +20,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <random>
 
 /*
 ========================================================================================================================
@@ -28,6 +29,19 @@
 */
 
 #include "d_tile.hpp"
+
+/*
+========================================================================================================================
+- - Start of D_Special_Sections - -
+========================================================================================================================
+*/
+
+enum class D_Special_Sections
+{
+    Entrance,
+    Exit,
+    Seeded,
+};
 
 /*
 ========================================================================================================================
@@ -52,14 +66,23 @@ public:
     void save(std::string path, std::string file_name) const;
     void swap_tile(uint8_t col, uint8_t row, std::shared_ptr<D_Tile> replacement);
     std::string const to_string() const;
-    std::vector<std::vector<std::shared_ptr<D_Tile>>> const & get_display_mat();
+    std::vector<std::vector<std::shared_ptr<D_Tile>>> const &get_display_mat();
 
 private:
     std::vector<std::vector<std::shared_ptr<D_Tile>>> display_mat;
+    std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> theme_map; /*! TODO: Why don't we load theme's into individual maps?*/
     std::vector<std::pair<size_t, size_t>> unseedables;
+    std::random_device rd;
+    std::mt19937 gen;
+    std::uniform_int_distribution<> distr;
     std::string theme;
+    std::pair<size_t, size_t> entrance;
+    std::pair<size_t, size_t> exit;
     uint8_t cols;
     uint8_t rows;
     bool has_exit_flag;
-};
 
+    void set_special_section(D_Special_Sections spec);
+    bool is_reachable(std::pair<size_t, size_t> start, std::pair<size_t, size_t> dest);
+    void fill_remaining_sections();
+};

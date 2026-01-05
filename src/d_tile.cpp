@@ -618,7 +618,7 @@ inline void D_Tile::permutate(std::shared_ptr<D_Tile> permutateable,
                               std::vector<std::shared_ptr<D_Tile>> &permutations,
                               size_t &entrance_count,
                               size_t &exit_count)
-{ //! TODO:We may be able to move tile rotation processing into another function for refactoring.
+{ /*! TODO:We may be able to move tile rotation processing into another function for refactoring.*/
     if (nullptr == permutateable)
         throw std::invalid_argument(ERR_FORMAT("Encountered a nullptr while trying to permutate a tile!"));
 
