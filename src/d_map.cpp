@@ -80,6 +80,31 @@ D_Map::~D_Map()
     //! TODO: this
 }
 
+/*! TODO: We can actually build the map as if it were
+a graph, starting from the entrance and the randomly
+setting connections to neighboor nodes, then placing
+those nodes in a queue to visit then set connections
+until the queue is empty. This would ideally create
+more randomness while being more efficient as we
+already know the map design will be valid due the
+way we built it.
+
+- resize our matrix and other init ops
+- place the entrance
+- place the connected tile in the queue to visit.
+- while there are tiles to visit
+- - pop first
+- - add required connections
+- - set directions we cant connect in
+- - randomly decide if we want to connect in the remaining directions
+- - pick a tile that meets the requirements
+- - shuffle the neighboors to connect to
+- - for each direction to connect in
+- - - add the neighboor to the visit queue
+- for each unvisited tile  set it as an empty tile
+*/
+
+
 void D_Map::generate()
 {
     // Reset our display matrix
