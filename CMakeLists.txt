@@ -21,7 +21,7 @@ target_include_directories(D_Builder PRIVATE inc/)
 # Qt stuff
 if(NOT CMAKE_PREFIX_PATH)
     message(STATUS "Using default Qt path...")
-    set(CMAKE_PREFIX_PATH "~/0-Main/0-Repos/Qt/6.10.1/gcc_64")
+    set(CMAKE_PREFIX_PATH "~/repos/Qt/6.10.1/gcc_64/")
 else()
     message(STATUS "Using passed Qt path...")
 endif()
