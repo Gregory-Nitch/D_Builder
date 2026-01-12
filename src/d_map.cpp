@@ -140,7 +140,6 @@ void D_Map::swap_tile(uint8_t col, uint8_t row, std::shared_ptr<D_Tile> replacem
 
 std::string const D_Map::to_string() const
 {
-
     std::stringstream ss;
     ss << "\n\n- - - D_Map Info: - - -\n";
     ss << "\tTheme: " << theme << "\n";
@@ -149,13 +148,14 @@ std::string const D_Map::to_string() const
     ss << "\tConnection Chance: " << connection_chance << "\n";
     ss << "- - - Connections - - -\n";
 
-    //! TODO: the follwoing format is wrong!
-    for (auto &&col : display_mat)
+    for (uint8_t row = 0; row < display_mat.at(0).size(); row++)
     {
-        for (auto &&tile : col)
+        ss << "Row[" << row << "]:";
+        for (uint8_t col = 0; col < display_mat.size(); col++)
         {
-            ss << "[" << tile->connections_to_string() << "]";
+            ss << "[" << display_mat.at(col).at(row)->connections_to_string() << "]";
         }
+        ss << "\n";
     }
 
     ss << "- - - - - - - - - - - -\n\n";
