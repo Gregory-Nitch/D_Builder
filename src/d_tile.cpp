@@ -107,12 +107,6 @@
 #define TILE_FLIP_FLG_IDX (6)
 
 /***********************************************************************************************************************
- * @brief Initial mask given to a tile before mapping its connection to bits, also given to tiles with no connections.
- * all bits are set to zero.
- **********************************************************************************************************************/
-#define CONNECTION_ZERO_MASK (0x0)
-
-/***********************************************************************************************************************
  * @brief Expected string when parsing a tile that has no connections.
  **********************************************************************************************************************/
 #define NA_CONNECTION_TOKEN "NA"
@@ -289,6 +283,8 @@ void D_Tile::load_tiles(std::filesystem::path const &dir_path, std::filesystem::
             entrance_count++;
         if (tile->is_exit())
             exit_count++;
+        if (!tile->get_connections().mask)
+            Empty_Tile = tile;
     }
 
     Entrance_Map.reserve(entrance_count);
@@ -503,13 +499,7 @@ std::string const D_Tile::to_string() const
 {
     std::stringstream ss;
     ss << "ID:" << id << ",Name:" << name << ",Theme:" << theme << ",Connections:";
-
-    for (std::pair<uint32_t, std::string> pair : Connection_Bit_Mask_to_Str_Map)
-    {
-        if (connections.mask & pair.first)
-            ss << Connection_Bit_Mask_to_Str_Map.at(pair.first) << ",";
-    }
-
+    ss << connections_to_string();
     ss << ",Entrance:";
     is_entrance() ? ss << "is entrance" : ss << "not entrance";
     ss << ",Exit:";
@@ -521,6 +511,24 @@ std::string const D_Tile::to_string() const
     ss << ",Flipped Tile:";
     is_flipped() ? ss << "is flipped" : ss << "is not flipped";
     ss << "Rotation:" << static_cast<uint8_t>(get_rotation_amount());
+
+    return ss.str();
+}
+
+/***********************************************************************************************************************
+ * @brief Returns the tile connections in a string.
+ *
+ * @retval std::string stringified connections.
+ **********************************************************************************************************************/
+std::string const D_Tile::connections_to_string() const
+{
+    std::stringstream ss;
+
+    for (std::pair<uint32_t, std::string> pair : Connection_Bit_Mask_to_Str_Map)
+    {
+        if (connections.mask & pair.first)
+            ss << Connection_Bit_Mask_to_Str_Map.at(pair.first) << ",";
+    }
 
     return ss.str();
 }

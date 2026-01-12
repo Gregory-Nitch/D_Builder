@@ -99,6 +99,8 @@ extern std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Entrance_Map;
  **********************************************************************************************************************/
 extern std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Exit_Map;
 
+extern std::shared_ptr<D_Tile> Empty_Tile;
+
 /***********************************************************************************************************************
  * @brief Global dungeon map for the application, will be used to keep track of what should be displayed in the GUI.
  **********************************************************************************************************************/

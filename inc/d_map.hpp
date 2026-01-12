@@ -17,6 +17,7 @@
 */
 
 #include <cstdint>
+#include <deque>
 #include <vector>
 #include <string>
 #include <memory>
@@ -32,16 +33,19 @@
 
 /*
 ========================================================================================================================
-- - Start of D_Special_Sections - -
+- - Macros - -
 ========================================================================================================================
 */
 
-enum class D_Special_Sections
-{
-    Entrance,
-    Exit,
-    Seeded,
-};
+/***********************************************************************************************************************
+ * @brief Maximum amount of neighboors any tile will have.
+ **********************************************************************************************************************/
+#define MAX_NEIGHBOORS (4)
+
+/***********************************************************************************************************************
+ * @brief Represents 100%.
+ **********************************************************************************************************************/
+#define ONE_HUNDRED_PERCENT (100)
 
 /*
 ========================================================================================================================
@@ -67,22 +71,28 @@ public:
     void swap_tile(uint8_t col, uint8_t row, std::shared_ptr<D_Tile> replacement);
     std::string const to_string() const;
     std::vector<std::vector<std::shared_ptr<D_Tile>>> const &get_display_mat();
+    uint8_t get_connection_chance() const;
 
 private:
     std::vector<std::vector<std::shared_ptr<D_Tile>>> display_mat;
     std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> theme_map; /*! TODO: Why don't we load theme's into individual maps?*/
-    std::vector<std::pair<size_t, size_t>> unseedables;
+    std::deque<std::pair<uint8_t, uint8_t>> to_visit;
     std::random_device rd;
     std::mt19937 gen;
     std::uniform_int_distribution<> distr;
     std::string theme;
-    std::pair<size_t, size_t> entrance;
-    std::pair<size_t, size_t> exit;
     uint8_t cols;
     uint8_t rows;
-    bool has_exit_flag;
+    uint8_t connection_chance; // Out of 100, values over or equal to 100 yield a 100% chance of connection.
 
-    void set_special_section(D_Special_Sections spec);
-    bool is_reachable(std::pair<size_t, size_t> start, std::pair<size_t, size_t> dest);
-    void fill_remaining_sections();
+    void reset_for_generate(void);
+    void start_generation_at_entrance(void);
+    std::shared_ptr<D_Tile> D_Map::chose_tile_based_on_connections(std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> &tile_map,
+                                                                   D_Connections valid_connections,
+                                                                   D_Connections possible_connections);
+    void place_nodes(void);
+    void calculate_connections_and_add_visitors(std::pair<uint8_t, uint8_t> &const current_point,
+                                                D_Connections &valid_connections,
+                                                D_Connections &possible_connections);
+    void fill_empty_tiles(void);
 };
