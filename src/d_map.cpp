@@ -204,7 +204,6 @@ void D_Map::swap_tile(uint8_t col, uint8_t row, std::shared_ptr<D_Tile> replacem
  **********************************************************************************************************************/
 std::string const D_Map::to_string() const
 {
-
     std::stringstream ss;
     ss << "\n\n- - - D_Map Info: - - -\n";
     ss << "\tTheme: " << theme << "\n";
@@ -215,10 +214,12 @@ std::string const D_Map::to_string() const
 
     for (size_t row = 0; row < static_cast<size_t>(rows) - 1; row++)
     {
+        ss << "Row[" << row << "]:";
         for (size_t col = 0; col < static_cast<size_t>(cols) - 1; col++)
         {
             ss << "[" << display_mat.at(col).at(row)->connections_to_string() << "]";
         }
+        ss << "\n";
     }
 
     ss << "- - - - - - - - - - - -\n\n";
