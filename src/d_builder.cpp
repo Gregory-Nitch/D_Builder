@@ -1,6 +1,4 @@
 /***********************************************************************************************************************
- * LICENSE : TODO!
- *
  * @date 2025-12-14
  * @author Gregory Nitch
  *
@@ -66,7 +64,7 @@ int main(int argc, char **argv)
         D_Tile::load_tiles(loaded_dir);
     }
 
-    Dungeon_Map = std::make_unique<D_Map>(3, 3, "fort");
+    Dungeon_Map = std::make_unique<D_Map>(3, 3, 50, Tile_Map);
 
     return EXIT_SUCCESS;
 }

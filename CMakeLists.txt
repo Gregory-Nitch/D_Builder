@@ -48,10 +48,32 @@ else()
     message(FATAL_ERROR "Invalid build type, use -DCMAKE_BUILD_TYPE and set 'release' or 'debug'")
 endif()
 
+# Test executable for generation tests
+add_executable(D_Generation_Test src/d_generation_test.cpp)
+
+target_sources(D_Generation_Test 
+    PRIVATE src/d_generation_test.cpp
+    PRIVATE src/d_builder_common.cpp
+    PRIVATE src/d_map.cpp
+    PRIVATE src/d_tile.cpp
+)
+
+target_include_directories(D_Generation_Test PRIVATE inc/)
+target_link_libraries(D_Generation_Test PRIVATE Qt6::Gui)
+
+if(CMAKE_BUILD_TYPE STREQUAL "debug")
+    target_link_libraries(D_Generation_Test PRIVATE -fsanitize=address)
+    target_compile_options(D_Generation_Test PRIVATE -g -Wall -Wextra -Wshadow -Wunused -Wconversion -pedantic -fdiagnostics-color=always -fsanitize=address)
+elseif(CMAKE_BUILD_TYPE STREQUAL "release")
+    target_compile_options(D_Generation_Test PRIVATE -O2 -fPIC -D_FORTIFY_SOURCE=2 -Wl,-z,relro -Wl,-z,now -Wall -Wextra -Wshadow -Wunused -Wconversion -pedantic -fdiagnostics-color=always)
+endif()
 
 # Get them tests running
 include(CTest)
 
+add_test(NAME generation_tests COMMAND D_Generation_Test)
+
+# TODO We need to add other stuff to the above test. such as valgrind
 
 #########################################################################
 #                           Installation Rules                          #

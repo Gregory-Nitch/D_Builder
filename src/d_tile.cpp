@@ -1,6 +1,4 @@
 /***********************************************************************************************************************
- * LICENSE : TODO!
- *
  * @date : 2025-12-14
  * @author : Gregory Nitch
  *
@@ -223,7 +221,7 @@ D_Tile::D_Tile(std::filesystem::path const &in_path)
 }
 
 /***********************************************************************************************************************
- * @brief Destructor.
+ * @brief D_Tile Destructor.
  **********************************************************************************************************************/
 D_Tile::~D_Tile()
 {
@@ -234,8 +232,8 @@ D_Tile::~D_Tile()
  * @brief Loads all the tiles from a given directory, places them in the global map and then loads the acutal images as
  * QImages for each tile.
  *
- * @param dir_path Directory path to a group of images to load.
- * @param loaded_path Directory path to move the loaded images too. Defaults to an empty path incase we have already
+ * @param[in] dir_path Directory path to a group of images to load.
+ * @param[in] loaded_path Directory path to move the loaded images too. Defaults to an empty path incase we have already
  * copied and generated tiles in the loaded directory.
  *
  * @note Does not generate permutations in the global maps, if that is required call generate_tiles. Doing so will also
@@ -276,7 +274,7 @@ void D_Tile::load_tiles(std::filesystem::path const &dir_path, std::filesystem::
             tile->copy_tile_img(loaded_path);
         }
         //! NOTE: We only load the tile image after we have ensured it is in the proper directory.
-        tile->image = std::make_unique<QImage>(QString::fromStdString(tile->path.generic_string()));
+        tile->image = std::make_shared<QImage>(QString::fromStdString(tile->path.generic_string()));
         tiles.push_back(tile);
 
         if (tile->is_entrance())
@@ -352,7 +350,7 @@ void D_Tile::generate_tiles()
         << " Exit count:" << exit_count << " [Tile]:";
     for (auto tile : permutations)
     {
-        //! TODO: vvv (generate_tile_img()) Move image gen out of the loop and use multiple threads for faster processing?
+        //! IMPROVEMENT: vvv (generate_tile_img()) Move image gen out of the loop and use multiple threads for faster processing?
         tile->generate_tile_img();
         std::pair<uint64_t, std::shared_ptr<D_Tile>> tile_pair = {tile->id, tile};
         auto emplace_pair = Tile_Map.emplace(tile_pair);
@@ -388,7 +386,7 @@ void D_Tile::generate_tiles()
 /***********************************************************************************************************************
  * @brief Gets the name of the tile.
  *
- * @returns Name of the tile.
+ * @retval std::string Name of the tile.
  **********************************************************************************************************************/
 std::string const &D_Tile::get_name() const
 {
@@ -398,7 +396,7 @@ std::string const &D_Tile::get_name() const
 /***********************************************************************************************************************
  * @brief Gets the theme of the tile.
  *
- * @returns Theme of the tile.
+ * @retval std::string Theme of the tile.
  **********************************************************************************************************************/
 std::string const &D_Tile::get_theme() const
 {
@@ -408,9 +406,9 @@ std::string const &D_Tile::get_theme() const
 /***********************************************************************************************************************
  * @brief Gets the ID of the tile.
  *
- * @returns ID of the tile.
+ * @retval uint64_t ID of the tile.
  **********************************************************************************************************************/
-uint64_t const D_Tile::get_id() const
+uint64_t D_Tile::get_id() const
 {
     return id;
 }
@@ -418,21 +416,31 @@ uint64_t const D_Tile::get_id() const
 /***********************************************************************************************************************
  * @brief Gets the connection bit map of the tile.
  *
- * @returns Connection bit map of the tile.
+ * @retval D_Connections Connection bit map of the tile.
  **********************************************************************************************************************/
-D_Connections const D_Tile::get_connections() const
+D_Connections D_Tile::get_connections() const
 {
     return connections;
 }
 
 /***********************************************************************************************************************
+ * @brief Gets the QImage associated with the given tile.
+ *
+ * @retval std::shared_ptr<QImage> Pointer to the image of the tile from the loaded directory.
+ **********************************************************************************************************************/
+std::shared_ptr<QImage> const &D_Tile::get_image()
+{
+    return image;
+}
+
+/***********************************************************************************************************************
  * @brief Gets the permutable flag of the tile.
  *
- * @returns Whether or not the tile is permutable of the tile.
+ * @retval bool Whether or not the tile is permutatble.
  *
  * @note Tiles that were made from permutable tiles are not permutable.
  **********************************************************************************************************************/
-bool const D_Tile::is_permutateable() const
+bool D_Tile::is_permutateable() const
 {
     return is_permutateable_flag;
 }
@@ -440,9 +448,9 @@ bool const D_Tile::is_permutateable() const
 /***********************************************************************************************************************
  * @brief Gets the entrance flag of the tile.
  *
- * @returns Whether or not the tile is an entrance tile.
+ * @retval bool Whether or not the tile is an entrance tile.
  **********************************************************************************************************************/
-bool const D_Tile::is_entrance() const
+bool D_Tile::is_entrance() const
 {
     return is_entrance_flag;
 }
@@ -450,9 +458,9 @@ bool const D_Tile::is_entrance() const
 /***********************************************************************************************************************
  * @brief Gets the exit flag of the tile.
  *
- * @returns Whether or not the tile is an exit tile.
+ * @retval bool Whether or not the tile is an exit tile.
  **********************************************************************************************************************/
-bool const D_Tile::is_exit() const
+bool D_Tile::is_exit() const
 {
     return is_exit_flag;
 }
@@ -460,11 +468,11 @@ bool const D_Tile::is_exit() const
 /***********************************************************************************************************************
  * @brief Gets the flippable flag of the tile.
  *
- * @returns Whether or not the tile is flippable.
+ * @retval bool Whether or not the tile is flippable.
  *
  * @note Tiles made from flippable tiles are not set as flippable themselves after their creation.
  **********************************************************************************************************************/
-bool const D_Tile::is_flippable() const
+bool D_Tile::is_flippable() const
 {
     return is_flippable_flag;
 }
@@ -474,7 +482,7 @@ bool const D_Tile::is_flippable() const
  *
  * @retval bool Whether or not the tile has been flipped.
  **********************************************************************************************************************/
-bool const D_Tile::is_flipped() const
+bool D_Tile::is_flipped() const
 {
     return is_flipped_flag;
 }
@@ -484,7 +492,7 @@ bool const D_Tile::is_flipped() const
  *
  * @retval Connection_Rotations enum value to the amount the image needed to be rotated to produce the permutation.
  **********************************************************************************************************************/
-Connection_Rotations const D_Tile::get_rotation_amount() const
+Connection_Rotations D_Tile::get_rotation_amount() const
 {
     return rotation_amount;
 }
@@ -492,7 +500,7 @@ Connection_Rotations const D_Tile::get_rotation_amount() const
 /***********************************************************************************************************************
  * @brief Outputs the tile information string form.
  *
- * @returns The tile information as a string in the form of:
+ * @retval std::string The tile information as a string in the form of:
  * ID:<id>,Name:<name>,Theme:<theme>,Connections:<connections,>,Entrance:<flag>,Exit:<flag>,Permutable:<flag>,Flippable:<flag>
  **********************************************************************************************************************/
 std::string const D_Tile::to_string() const
@@ -541,6 +549,15 @@ std::string const D_Tile::connections_to_string() const
 
 /***********************************************************************************************************************
  * @brief Private constructor to build new D_Tile objects from permutaion values.
+ *
+ * @param[in] permutation_name Name of the permutation.
+ * @param[in] permutation_theme Theme of the permutation.
+ * @param[in] permutation_id Id for the new permutation.
+ * @param[in] permutation_connections The connections for the permutation.
+ * @param[in] permutation_is_entrance_flag If the permutation is an entrance.
+ * @param[in] permutation_is_exit_flag If the permutation is an exit.
+ * @param[in] permutation_is_permutable_flag If the permutation is permutable.
+ * @param[in] permutation_is_flippable_flag If the permutation is flipable.
  **********************************************************************************************************************/
 D_Tile::D_Tile(std::string permutation_name,
                std::string permutation_theme,
@@ -620,13 +637,13 @@ inline void D_Tile::map_connection_tokens(std::vector<std::string> connection_to
  * @param[out] entrance_count Number of current entrances being made during tile generation.
  * @param[out] exit_count Number of current exits being made during tile generation.
  *
- * @throws std::invalid_argument a nullptr.
+ * @throws std::invalid_argument on a nullptr.
  **********************************************************************************************************************/
 inline void D_Tile::permutate(std::shared_ptr<D_Tile> permutateable,
                               std::vector<std::shared_ptr<D_Tile>> &permutations,
                               size_t &entrance_count,
                               size_t &exit_count)
-{ /*! TODO:We may be able to move tile rotation processing into another function for refactoring.*/
+{ /*! IMPROVEMENT:We may be able to move tile rotation processing into another function for refactoring.*/
     if (nullptr == permutateable)
         throw std::invalid_argument(ERR_FORMAT("Encountered a nullptr while trying to permutate a tile!"));
 
@@ -675,7 +692,7 @@ inline void D_Tile::permutate(std::shared_ptr<D_Tile> permutateable,
         tile->rotation_amount = ROTATION_ARR[idx];
         std::string filename = tile->to_filename();
         tile->path = std::filesystem::path(std::format("{}/{}", permutateable->path.parent_path().generic_string(), filename));
-        tile->image = std::make_unique<QImage>(*permutateable->image);
+        tile->image = std::make_shared<QImage>(*permutateable->image);
         permutations.push_back(tile);
     }
 
@@ -698,7 +715,7 @@ inline void D_Tile::permutate(std::shared_ptr<D_Tile> permutateable,
         flipped->is_flipped_flag = true;
         std::string filename = flipped->to_filename();
         flipped->path = std::filesystem::path(std::format("{}/{}", permutateable->path.parent_path().generic_string(), filename));
-        flipped->image = std::make_unique<QImage>(*permutateable->image);
+        flipped->image = std::make_shared<QImage>(*permutateable->image);
         permutations.push_back(flipped);
 
         // And rotate
@@ -720,7 +737,7 @@ inline void D_Tile::permutate(std::shared_ptr<D_Tile> permutateable,
             tile->rotation_amount = ROTATION_ARR[idx];
             std::string filename = tile->to_filename();
             tile->path = std::filesystem::path(std::format("{}/{}", permutateable->path.parent_path().generic_string(), filename));
-            tile->image = std::make_unique<QImage>(*permutateable->image);
+            tile->image = std::make_shared<QImage>(*permutateable->image);
             permutations.push_back(tile);
         }
     }
@@ -771,8 +788,10 @@ inline std::string const D_Tile::to_filename()
 
 /***********************************************************************************************************************
  * @brief Creates an image for a D_Tile and saves it at the instances's path member.
+ *
+ * @retval bool Whether or not the image was successfuly created.
  **********************************************************************************************************************/
-void D_Tile::generate_tile_img()
+bool D_Tile::generate_tile_img()
 {
     if (!image || image->isNull())
         throw std::invalid_argument(ERR_FORMAT("Null image reference found when generating a tile image!"));
@@ -807,7 +826,7 @@ void D_Tile::generate_tile_img()
         *image = image->transformed(matrix);
     }
 
-    image->save(QString::fromStdString(path.generic_string()));
+    return image->save(QString::fromStdString(path.generic_string()), "JPG", DEFAULT_OUTPUT_QUALITY);
 }
 
 /***********************************************************************************************************************

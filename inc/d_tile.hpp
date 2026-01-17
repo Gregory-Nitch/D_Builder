@@ -1,6 +1,4 @@
 /***********************************************************************************************************************
- * LICENSE : TODO!
- *
  * @date : 2025-12-14
  * @author : Gregory Nitch
  *
@@ -62,11 +60,11 @@
 */
 
 /***********************************************************************************************************************
- * @enum Connection_Rotations
  * @brief Represents the different rotation degrees when permutating a tile.
  *
  * @remarks Values:
- *      Nintey = 1, // Start from one for bit shifting operations
+ *      Zero = 0,
+ *      Nintey = 1,
  *      One_Eighty = 2,
  *      Two_Seventy = 3,
  **********************************************************************************************************************/
@@ -97,7 +95,7 @@ constexpr std::array<Connection_Rotations, 3> ROTATION_ARR = {
  * @union D_Connections
  * @brief Represents connections that each tile can have, in a uint32_t.
  *
- * @members :
+ * @members:
  *      @public bits = Each indivitual unit32_t bit. T0-L7 (clockwise)
  *      @public side_masks = each side as a uint8_mask.
  *      @public mask = The entire uint32_t to use as a complete mask over the bits.
@@ -249,7 +247,6 @@ std::unordered_map<uint32_t, std::string> const Connection_Bit_Mask_to_Str_Map =
 */
 
 /***********************************************************************************************************************
- * @class D_Tile
  * @brief Represents a possbile section in the D_Map object.
  *
  * @members :
@@ -280,19 +277,20 @@ public:
     static void generate_tiles();
     std::string const &get_name() const;
     std::string const &get_theme() const;
-    uint64_t const get_id() const;
-    D_Connections const get_connections() const;
-    bool const is_permutateable() const;
-    bool const is_entrance() const;
-    bool const is_exit() const;
-    bool const is_flippable() const;
-    bool const is_flipped() const;
-    Connection_Rotations const get_rotation_amount() const;
+    uint64_t get_id() const;
+    D_Connections get_connections() const;
+    std::shared_ptr<QImage> const &get_image();
+    bool is_permutateable() const;
+    bool is_entrance() const;
+    bool is_exit() const;
+    bool is_flippable() const;
+    bool is_flipped() const;
+    Connection_Rotations get_rotation_amount() const;
     std::string const to_string() const;
     std::string const connections_to_string() const;
 
 private:
-    std::unique_ptr<QImage> image = nullptr;
+    std::shared_ptr<QImage> image = nullptr;
     std::filesystem::path path;
     std::string name;
     std::string theme;
@@ -322,7 +320,7 @@ private:
                                  size_t &entrance_count,
                                  size_t &exit_count);
     inline std::string const to_filename();
-    void generate_tile_img();
+    bool generate_tile_img();
     void copy_tile_img(std::filesystem::path loaded_dir);
     static inline D_Connections rotate_connections(Connection_Rotations rotation, D_Connections to_rotate);
     static inline D_Connections flip_connections(D_Connections to_flip);
