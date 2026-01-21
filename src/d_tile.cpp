@@ -247,7 +247,7 @@ void D_Tile::load_tiles(std::filesystem::path const &dir_path, std::filesystem::
 
     size_t tile_count = 0;
     std::vector<std::shared_ptr<D_Tile>> tiles;
-    for (std::filesystem::directory_entry const dir_entry : std::filesystem::directory_iterator{dir_path})
+    for (std::filesystem::directory_entry const &dir_entry : std::filesystem::directory_iterator{dir_path})
     {
         if (dir_entry.is_directory())
             continue;
@@ -264,7 +264,7 @@ void D_Tile::load_tiles(std::filesystem::path const &dir_path, std::filesystem::
     size_t exit_count = 0;
     Tile_Map.reserve(tile_count);
     tiles.reserve(tile_count);
-    for (std::filesystem::directory_entry const dir_entry : std::filesystem::directory_iterator{dir_path})
+    for (std::filesystem::directory_entry const &dir_entry : std::filesystem::directory_iterator{dir_path})
     {
         if (dir_entry.is_directory())
             continue;
@@ -713,8 +713,10 @@ inline void D_Tile::permutate(std::shared_ptr<D_Tile> permutateable,
             ));
 
         flipped->is_flipped_flag = true;
-        std::string filename = flipped->to_filename();
-        flipped->path = std::filesystem::path(std::format("{}/{}", permutateable->path.parent_path().generic_string(), filename));
+        std::string flipped_filename = flipped->to_filename();
+        flipped->path = std::filesystem::path(std::format("{}/{}",
+                                                          permutateable->path.parent_path().generic_string(),
+                                                          flipped_filename));
         flipped->image = std::make_shared<QImage>(*permutateable->image);
         permutations.push_back(flipped);
 
@@ -757,7 +759,6 @@ inline std::string const D_Tile::to_filename()
     ss << name << ";" << theme << ";";
 
     // Build a vector of connection tokens to properly place commas or the ending semicolon.
-    bool need_comma = false;
     std::vector<std::string> connection_tokens;
     connection_tokens.reserve(32);
     for (auto itr = Connection_Bit_Mask_to_Str_Map.begin(); itr != Connection_Bit_Mask_to_Str_Map.end(); itr++)
@@ -797,7 +798,7 @@ bool D_Tile::generate_tile_img()
         throw std::invalid_argument(ERR_FORMAT("Null image reference found when generating a tile image!"));
 
     QTransform matrix;
-    size_t degrees = 0;
+    double degrees = 0.0;
 
     if (is_flipped())
         image->flip(Qt::Horizontal);
@@ -805,22 +806,22 @@ bool D_Tile::generate_tile_img()
     switch (rotation_amount)
     {
     case Connection_Rotations::Nintey:
-        degrees = 90;
+        degrees = 90.0;
         break;
 
     case Connection_Rotations::One_Eighty:
-        degrees = 180;
+        degrees = 180.0;
         break;
 
     case Connection_Rotations::Two_Seventy:
-        degrees = 270;
+        degrees = 270.0;
         break;
 
     default: // No Rotation required.
         break;
     }
 
-    if (0 != degrees)
+    if (0 < degrees)
     {
         matrix.rotate(degrees);
         *image = image->transformed(matrix);
