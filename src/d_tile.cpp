@@ -518,7 +518,7 @@ std::string const D_Tile::to_string() const
     is_flippable() ? ss << "is flippable" : ss << "not flippable";
     ss << ",Flipped Tile:";
     is_flipped() ? ss << "is flipped" : ss << "is not flipped";
-    ss << "Rotation:" << static_cast<uint8_t>(get_rotation_amount());
+    ss << "Rotation:" << static_cast<int>(get_rotation_amount());
 
     return ss.str();
 }
@@ -873,25 +873,19 @@ inline D_Connections D_Tile::rotate_connections(Connection_Rotations rotation, D
  *
  * @param[in] to_flip Connections to flip.
  *
- * @retval D_Connections The passed connections flipped horizontally, ie left becomes right and right becomes left, top
- * and bottom are mirrored.
+ * @retval D_Connections The passed connections flipped horizontally.
  **********************************************************************************************************************/
 inline D_Connections D_Tile::flip_connections(D_Connections to_flip)
 {
-    // Swap left and right masks
     D_Connections out = {.mask = CONNECTION_ZERO_MASK};
-    out.side_masks.left = to_flip.side_masks.right;
-    out.side_masks.right = to_flip.side_masks.left;
 
-    // Top and Bottom masks need to be reversed, extract the bit with i and shift by j.
-    for (size_t i = 0, j = UINT8_WIDTH - 1; i < UINT8_WIDTH; i++, j--)
-    {
-        if (UINT8_WIDTH < j)
-            throw std::runtime_error(ERR_FORMAT("While flipping connections we were going to write outside of the uint8_t bit width!"));
-
-        out.side_masks.top |= ((to_flip.side_masks.top >> i) & 1u) << j;
-        out.side_masks.bottom |= ((to_flip.side_masks.bottom >> i) & 1u) << j;
-    }
+    // Reverse top and bottom
+    out.side_masks.top = reverse_8bits(to_flip.side_masks.top);
+    out.side_masks.bottom = reverse_8bits(to_flip.side_masks.bottom);
+    // Right becomes Left AND reverses
+    out.side_masks.left = reverse_8bits(to_flip.side_masks.right);
+    // Left becomes Right AND reverses
+    out.side_masks.right = reverse_8bits(to_flip.side_masks.left);
 
     return out;
 }

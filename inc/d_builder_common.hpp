@@ -138,3 +138,18 @@ extern std::string Gen_Flag;
 */
 
 void init_img_dirs(void);
+
+/***********************************************************************************************************************
+ * @brief Helper function to reverse 8 bits.
+ *
+ * @param[in] n bits as a uint8.
+ *
+ * @retval uint8_t the reversed representation.
+ **********************************************************************************************************************/
+inline uint8_t reverse_8bits(uint8_t n)
+{
+    n = ((n >> 1) & 0x55) | ((n << 1) & 0xAA);
+    n = ((n >> 2) & 0x33) | ((n << 2) & 0xCC);
+    n = ((n >> 4) & 0x0F) | ((n << 4) & 0xF0);
+    return n;
+}

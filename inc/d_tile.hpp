@@ -78,12 +78,25 @@ enum class Connection_Rotations
 
 /***********************************************************************************************************************
  * @brief An array of the Connection_Rotation enums used for iteration.
+ *
  * @note Zero is left out of this array.
  **********************************************************************************************************************/
 constexpr std::array<Connection_Rotations, 3> ROTATION_ARR = {
     Connection_Rotations::Nintey,
     Connection_Rotations::One_Eighty,
     Connection_Rotations::Two_Seventy};
+
+/***********************************************************************************************************************
+ * @brief An array of uint32_t masks that cover all the connections on a given side of a tile. This is used when
+ * checking connections for tiles during map generation.
+ *
+ * @note This array assumes a clockwise rotation just like the connection layout of a tile's connection bit map.
+ **********************************************************************************************************************/
+constexpr std::array<uint32_t, 4> CONNECTION_SIDE_MASKS = {
+    0x000000FF,  // Top
+    0x0000FF00,  // Right
+    0x00FF0000,  // Bottom
+    0xFF000000}; // Left
 
 /*
 ========================================================================================================================
@@ -99,6 +112,22 @@ constexpr std::array<Connection_Rotations, 3> ROTATION_ARR = {
  *      @public bits = Each indivitual unit32_t bit. T0-L7 (clockwise)
  *      @public side_masks = each side as a uint8_mask.
  *      @public mask = The entire uint32_t to use as a complete mask over the bits.
+ *
+ *                      TOP (L -> R)
+ *              (0) (1) (2) (3) (4) (5) (6) (7)
+ *               -----------------------------
+ *          (31)|                             |(8)
+ *          (30)|                             |(9)
+ *   LEFT   (29)|                             |(10)  RIGHT
+ * (B -> T) (28)|      8x8 BATTLE MAP         |(11) (T -> B)
+ *          (27)|          TILE               |(12)
+ *          (26)|                             |(13)
+ *          (25)|                             |(14)
+ *          (24)|                             |(15)
+ *               -----------------------------
+ *              (23)(22)(21)(20)(19)(18)(17)(16)
+ *                      BOTTOM (R -> L)
+ *
  **********************************************************************************************************************/
 union D_Connections
 {
@@ -152,6 +181,8 @@ union D_Connections
         uint8_t bottom;
         uint8_t left;
     } side_masks;
+
+    uint8_t sides[4];
 
     uint32_t mask;
 };

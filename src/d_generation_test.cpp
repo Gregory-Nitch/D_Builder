@@ -50,45 +50,50 @@ std::string Gen_Flag = GENERATE_IMG_CLI_COMMAND;
  * @brief Iterates through maps of varying sizes and outputs the designs to a folder.
  **********************************************************************************************************************/
 void test_generations()
-{ //! TODO: We need to properly set the output directory for these tests
+{
     for (size_t i = 0; i < TEST_ITERATION_COUNT; i++)
     {
         Dungeon_Map->generate();
-        std::string file_name = std::format("Size-3x3_count{}.jpg", i);
+        std::string file_name = std::format("{}Size-3x3_count{}.jpg", DEFAULT_TEST_OUTPUT_IMG_PATH, i);
         if (!Dungeon_Map->save(file_name))
             throw std::runtime_error(ERR_FORMAT("Failed saving map!"));
+        LOG_DEBUG(std::format("Map generated, filename = {}", file_name));
     }
 
     for (size_t i = 0; i < TEST_ITERATION_COUNT; i++)
     {
         Dungeon_Map->generate(5, 5, 50, Tile_Map);
-        std::string file_name = std::format("Size-5x5_count{}.jpg", i);
+        std::string file_name = std::format("{}Size-5x5_count{}.jpg", DEFAULT_TEST_OUTPUT_IMG_PATH, i);
         if (!Dungeon_Map->save(file_name))
             throw std::runtime_error(ERR_FORMAT("Failed saving map!"));
+        LOG_DEBUG(std::format("Map generated, filename = {}", file_name));
     }
 
     for (size_t i = 0; i < TEST_ITERATION_COUNT; i++)
     {
         Dungeon_Map->generate(10, 10, 50, Tile_Map);
-        std::string file_name = std::format("Size-10x10_count{}.jpg", i);
+        std::string file_name = std::format("{}Size-10x10_count{}.jpg", DEFAULT_TEST_OUTPUT_IMG_PATH, i);
         if (!Dungeon_Map->save(file_name))
             throw std::runtime_error(ERR_FORMAT("Failed saving map!"));
+        LOG_DEBUG(std::format("Map generated, filename = {}", file_name));
     }
 
     for (size_t i = 0; i < TEST_ITERATION_COUNT; i++)
     {
         Dungeon_Map->generate(15, 15, 50, Tile_Map);
-        std::string file_name = std::format("Size-15x15_count{}.jpg", i);
+        std::string file_name = std::format("{}Size-15x15_count{}.jpg", DEFAULT_TEST_OUTPUT_IMG_PATH, i);
         if (!Dungeon_Map->save(file_name))
             throw std::runtime_error(ERR_FORMAT("Failed saving map!"));
+        LOG_DEBUG(std::format("Map generated, filename = {}", file_name));
     }
 
     for (size_t i = 0; i < TEST_ITERATION_COUNT; i++)
     {
         Dungeon_Map->generate(20, 20, 50, Tile_Map);
-        std::string file_name = std::format("Size-20x20_count{}.jpg", i);
+        std::string file_name = std::format("{}Size-20x20_count{}.jpg", DEFAULT_TEST_OUTPUT_IMG_PATH, i);
         if (!Dungeon_Map->save(file_name))
             throw std::runtime_error(ERR_FORMAT("Failed saving map!"));
+        LOG_DEBUG(std::format("Map generated, filename = {}", file_name));
     }
 }
 
