@@ -378,7 +378,6 @@ std::shared_ptr<D_Tile> D_Map::chose_tile_based_on_connections(D_Connections req
             // Check required connections
             if ((tile_connections.mask & required_connections.mask) != required_connections.mask)
             {
-                LOG_DEBUG("Tile missing required connections.");
                 continue;
             }
 
@@ -386,7 +385,6 @@ std::shared_ptr<D_Tile> D_Map::chose_tile_based_on_connections(D_Connections req
             uint32_t complete_mask = required_connections.mask | possible_connections.mask;
             if ((tile_connections.mask & ~complete_mask) != 0)
             {
-                LOG_DEBUG("Tile has connections outside of required and possible.");
                 continue;
             }
 
@@ -402,8 +400,6 @@ std::shared_ptr<D_Tile> D_Map::chose_tile_based_on_connections(D_Connections req
             }
             if (missing_required_direction)
             {
-                LOG_DEBUG("Tile doesn't have connections to connect in one of the possible directions.");
-                LOG_DEBUG(tile_pair.second->to_string());
                 continue;
             }
 
@@ -468,6 +464,16 @@ void D_Map::calculate_connections_and_add_visitors(std::pair<uint8_t, uint8_t> c
                                                    D_Connections &required_connections,
                                                    D_Connections &possible_connections)
 {
+    /*
+    !TODO:
+    We have an issue with choosing connections for large rooms. We are not adding related corners and sides to the
+    required and or possible masks. We need to ensure that when we add a corner on one side to a mask we add the related
+    corner to the same mask and then add all the other connections on that side to the possible mask. ie:
+        - T7 Required = R0 required + R1-6 possible
+        - T7 Possible = R0 possible + R1-6 possible
+    then check R7 and the other conners and do the same.
+     */
+
     distr.param(std::uniform_int_distribution<unsigned long>::param_type(0, ONE_HUNDRED_PERCENT));
 
     uint8_t current_col = current_point.first;
@@ -478,7 +484,6 @@ void D_Map::calculate_connections_and_add_visitors(std::pair<uint8_t, uint8_t> c
         uint8_t n_row = current_row + static_cast<uint8_t>(TILE_NEIGHBOOR_OFFSETS[i].second);
         if (n_col >= cols || n_row >= rows) // ie out of map bounds
         {
-            LOG_DEBUG(std::format("Out of bounds col:{} row:{}.", n_col, n_row));
             continue;
         }
 
@@ -488,7 +493,6 @@ void D_Map::calculate_connections_and_add_visitors(std::pair<uint8_t, uint8_t> c
             // Get our neighboors connections and reverse them
             uint8_t n_con_idx = TILE_NEIGHBOOR_SIDE_IDX_MIRRORS[i];
             required_connections.sides[i] = reverse_8bits(n_tile->get_connections().sides[n_con_idx]);
-            LOG_DEBUG(std::format("Found set neighboor col:{} row:{}.", n_col, n_row));
         }
         else if (distr(gen) <= connection_chance) // Give a chance to possibly connect in that direction
         {
@@ -499,7 +503,6 @@ void D_Map::calculate_connections_and_add_visitors(std::pair<uint8_t, uint8_t> c
             {
                 if (pair == n_pair)
                 {
-                    LOG_DEBUG(std::format("col:{} row:{} already in to visit.", n_pair.first, n_pair.second));
                     in_visit = true;
                     break;
                 }
@@ -514,13 +517,11 @@ void D_Map::calculate_connections_and_add_visitors(std::pair<uint8_t, uint8_t> c
         else // Don't connect
         {
             required_connections.sides[i] = CONNECTION_ZERO_MASK;
-            LOG_DEBUG(std::format("Skipping neighboor at col:{} row:{}.", n_col, n_row));
         }
     }
-    std::stringstream ss;
-    ss << "Setting connections, possible mask = [" << possible_connections.mask << "], required mask = ["
-       << required_connections.mask << "]";
-    LOG_DEBUG(ss.str());
+    LOG_DEBUG(std::format("Setting connections, possible mask = [{}], required mask = [{}]",
+                          possible_connections.mask,
+                          required_connections.mask));
 }
 
 /***********************************************************************************************************************
