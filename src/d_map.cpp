@@ -310,18 +310,45 @@ void D_Map::start_generation_at_entrance()
         possible_connections.side_masks.bottom ^= CONNECTION_SIDE_MASK;
     }
 
-    std::shared_ptr<D_Tile> chosen_tile = chose_tile_based_on_connections({}, possible_connections, Entrance_Map);
+    // Filter tiles that have connections outside of possible
+    std::vector<std::shared_ptr<D_Tile>> tile_canidates = {};
+    tile_canidates.reserve(Entrance_Map.size());
+    for (auto &&tile_pair : Entrance_Map)
+    {
+        if ((tile_pair.second->get_connections().mask & ~possible_connections.mask) != 0)
+        {
+            continue;
+        }
+        tile_canidates.push_back(tile_pair.second);
+    }
+
+    if (tile_canidates.empty())
+    {
+        std::stringstream err;
+        err << "Whilst filtering canidates for an entrance we could not find a tile that met requirements!"
+            << " Possible connections were = int_mask:[" << possible_connections.mask << "]"
+            << to_string();
+        throw std::runtime_error(ERR_FORMAT(err.str()));
+    }
+
+    distr.param(std::uniform_int_distribution<unsigned long>::param_type(0, tile_canidates.size() - 1UL));
+    std::shared_ptr<D_Tile> chosen_tile = tile_canidates.at(distr(gen));
     swap_tile(ent_col, ent_row, chosen_tile);
 
-    possible_connections = chosen_tile->get_connections();
-    if (possible_connections.side_masks.top)
-        to_visit.push_back({ent_col, ent_row - 1});
-    if (possible_connections.side_masks.right)
-        to_visit.push_back({ent_col + 1, ent_row});
-    if (possible_connections.side_masks.bottom)
-        to_visit.push_back({ent_col, ent_row + 1});
-    if (possible_connections.side_masks.left)
-        to_visit.push_back({ent_col - 1, ent_row});
+    D_Connections chosen_connections = chosen_tile->get_connections();
+    for (size_t i = 0; i < MAX_NEIGHBOORS; i++)
+    {
+        uint8_t n_col = ent_col + static_cast<uint8_t>(TILE_NEIGHBOOR_OFFSETS[i].first);
+        uint8_t n_row = ent_row + static_cast<uint8_t>(TILE_NEIGHBOOR_OFFSETS[i].second);
+        if (n_col >= cols || n_row >= rows) // ie out of map bounds
+        {
+            continue;
+        }
+        else if (chosen_connections.sides[i])
+        {
+            to_visit.push_back({n_col, n_row});
+        }
+    }
 }
 
 /***********************************************************************************************************************
@@ -346,16 +373,39 @@ std::shared_ptr<D_Tile> D_Map::chose_tile_based_on_connections(D_Connections req
     {
         for (auto tile_pair : tile_map)
         {
-            uint32_t tile_mask = tile_pair.second->get_connections().mask;
+            D_Connections tile_connections = tile_pair.second->get_connections();
 
-            // Check valid connections
-            if ((tile_mask & required_connections.mask) != required_connections.mask)
+            // Check required connections
+            if ((tile_connections.mask & required_connections.mask) != required_connections.mask)
+            {
+                LOG_DEBUG("Tile missing required connections.");
                 continue;
+            }
 
             // Check for any connection outside of the complete connection mask, ie not in required, or not in possible.
             uint32_t complete_mask = required_connections.mask | possible_connections.mask;
-            if ((tile_mask & ~complete_mask) != 0)
+            if ((tile_connections.mask & ~complete_mask) != 0)
+            {
+                LOG_DEBUG("Tile has connections outside of required and possible.");
                 continue;
+            }
+
+            // Ensure that we have a connection in the valid possible directions
+            bool missing_required_direction = false;
+            for (int i = 0; i < MAX_NEIGHBOORS; ++i)
+            {
+                if (possible_connections.sides[i] && (possible_connections.sides[i] & tile_connections.sides[i]) == 0)
+                {
+                    missing_required_direction = true;
+                    break;
+                }
+            }
+            if (missing_required_direction)
+            {
+                LOG_DEBUG("Tile doesn't have connections to connect in one of the possible directions.");
+                LOG_DEBUG(tile_pair.second->to_string());
+                continue;
+            }
 
             // All condtions for the canidate have been met, add it to the list to choose from
             tile_canidates.push_back(tile_pair.second);
@@ -375,7 +425,7 @@ std::shared_ptr<D_Tile> D_Map::chose_tile_based_on_connections(D_Connections req
     {
         std::stringstream err;
         err << "Whilst filtering canidates we could not find a tile that met requirements!"
-            << " Valid connections were = int_mask:[" << required_connections.mask << "]"
+            << " Required connections were = int_mask:[" << required_connections.mask << "]"
             << " Possible connections were = int_mask:[" << possible_connections.mask << "]"
             << to_string();
         throw std::runtime_error(ERR_FORMAT(err.str()));
@@ -402,6 +452,7 @@ void D_Map::place_nodes()
         calculate_connections_and_add_visitors(current, required_connections, possible_connections);
         std::shared_ptr<D_Tile> chosen_tile = chose_tile_based_on_connections(required_connections,
                                                                               possible_connections);
+        swap_tile(current.first, current.second, chosen_tile);
     }
 }
 
@@ -423,11 +474,13 @@ void D_Map::calculate_connections_and_add_visitors(std::pair<uint8_t, uint8_t> c
     uint8_t current_row = current_point.second;
     for (size_t i = 0; i < MAX_NEIGHBOORS; i++)
     {
-        // TODO: Static casts here?
         uint8_t n_col = current_col + static_cast<uint8_t>(TILE_NEIGHBOOR_OFFSETS[i].first);
         uint8_t n_row = current_row + static_cast<uint8_t>(TILE_NEIGHBOOR_OFFSETS[i].second);
         if (n_col >= cols || n_row >= rows) // ie out of map bounds
+        {
+            LOG_DEBUG(std::format("Out of bounds col:{} row:{}.", n_col, n_row));
             continue;
+        }
 
         std::shared_ptr<D_Tile> n_tile = display_mat.at(n_col).at(n_row);
         if (n_tile) // Neighboor already set with connections
@@ -435,19 +488,39 @@ void D_Map::calculate_connections_and_add_visitors(std::pair<uint8_t, uint8_t> c
             // Get our neighboors connections and reverse them
             uint8_t n_con_idx = TILE_NEIGHBOOR_SIDE_IDX_MIRRORS[i];
             required_connections.sides[i] = reverse_8bits(n_tile->get_connections().sides[n_con_idx]);
+            LOG_DEBUG(std::format("Found set neighboor col:{} row:{}.", n_col, n_row));
         }
-        else if (distr(gen) > connection_chance) // Give a chance to possibly connect in that direction
+        else if (distr(gen) <= connection_chance) // Give a chance to possibly connect in that direction
         {
             possible_connections.sides[i] = CONNECTION_SIDE_MASK;
             std::pair<uint8_t, uint8_t> n_pair = {n_col, n_row};
-            to_visit.push_back(n_pair);
-            LOG_DEBUG(std::format("Added col:{} row:{} to visit.", n_pair.first, n_pair.second));
+            bool in_visit = false;
+            for (auto &&pair : to_visit)
+            {
+                if (pair == n_pair)
+                {
+                    LOG_DEBUG(std::format("col:{} row:{} already in to visit.", n_pair.first, n_pair.second));
+                    in_visit = true;
+                    break;
+                }
+            }
+
+            if (!in_visit)
+            {
+                to_visit.push_back(n_pair);
+                LOG_DEBUG(std::format("Added col:{} row:{} to visit.", n_pair.first, n_pair.second));
+            }
         }
         else // Don't connect
         {
             required_connections.sides[i] = CONNECTION_ZERO_MASK;
+            LOG_DEBUG(std::format("Skipping neighboor at col:{} row:{}.", n_col, n_row));
         }
     }
+    std::stringstream ss;
+    ss << "Setting connections, possible mask = [" << possible_connections.mask << "], required mask = ["
+       << required_connections.mask << "]";
+    LOG_DEBUG(ss.str());
 }
 
 /***********************************************************************************************************************
@@ -456,14 +529,19 @@ void D_Map::calculate_connections_and_add_visitors(std::pair<uint8_t, uint8_t> c
  **********************************************************************************************************************/
 void D_Map::fill_empty_tiles()
 {
-    for (size_t col = 0; col < cols; col++)
+    if (!Empty_Tile)
     {
-        for (size_t row = 0; row < rows; row++)
+        throw std::runtime_error(ERR_FORMAT("Empty Tile was null!"));
+    }
+
+    for (uint8_t col = 0; col < cols; col++)
+    {
+        for (uint8_t row = 0; row < rows; row++)
         {
             std::shared_ptr<D_Tile> tile = display_mat.at(col).at(row);
             if (!tile)
             {
-                display_mat.at(col).at(row) = Empty_Tile;
+                swap_tile(col, row, Empty_Tile);
             }
         }
     }
