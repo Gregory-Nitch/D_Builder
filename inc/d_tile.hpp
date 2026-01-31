@@ -38,6 +38,12 @@
 */
 
 /***********************************************************************************************************************
+ * @brief A mask that covers a side with connections but excludes the corners. This shall be used with adding possible
+ * connections to a preposed tile.
+ **********************************************************************************************************************/
+#define CONNECTION_SIDE_MASK_CORNER_EXCLUDE (0x7E)
+
+/***********************************************************************************************************************
  * @brief Initial mask given to a tile before mapping its connection to bits, also given to tiles with no connections.
  * All bits are set to zero.
  **********************************************************************************************************************/
@@ -52,6 +58,23 @@
  * @brief A connection mask to turn on all connections for a tile.
  **********************************************************************************************************************/
 #define CONNECTION_FULL_MASK (0xFFFF'FFFF)
+
+/***********************************************************************************************************************
+ * @brief A mask to filter the first two bits out of a D_Connection.sides indexing value. Ie, it works like a ring
+ * buffer when it loops back to the front of an array. We can do this because the sides array size is 4, which is a
+ * power of 2.
+ **********************************************************************************************************************/
+#define NEXT_SIDE_IDX_BIT_MASK (0x03)
+
+/***********************************************************************************************************************
+ * @brief A mask for the first bit in a side's mask, ie just the number one.
+ **********************************************************************************************************************/
+#define SIDE_FIRST_BIT_MASK (0x01)
+
+/***********************************************************************************************************************
+ * @brief A mask for the last bit in a side's mask, this is the 8th bit which relates to the 7th connection for a side.
+ **********************************************************************************************************************/
+#define SIDE_LAST_BIT_MASK (0x80)
 
 /*
 ========================================================================================================================

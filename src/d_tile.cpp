@@ -508,6 +508,7 @@ std::string const D_Tile::to_string() const
     std::stringstream ss;
     ss << "ID:" << id << ",Name:" << name << ",Theme:" << theme << ",Connections:";
     ss << connections_to_string();
+    ss << ",Connections as Mask:" << connections.mask;
     ss << ",Entrance:";
     is_entrance() ? ss << "is entrance" : ss << "not entrance";
     ss << ",Exit:";

@@ -294,20 +294,31 @@ void D_Map::start_generation_at_entrance()
 
     if (0 == ent_col)
     {
-        possible_connections.side_masks.left ^= CONNECTION_SIDE_MASK;
+        possible_connections.side_masks.left ^= CONNECTION_SIDE_MASK_CORNER_EXCLUDE;
     }
     else if (cols - 1 == ent_col)
     {
-        possible_connections.side_masks.right ^= CONNECTION_SIDE_MASK;
+        possible_connections.side_masks.right ^= CONNECTION_SIDE_MASK_CORNER_EXCLUDE;
     }
 
     if (0 == ent_row)
     {
-        possible_connections.side_masks.top ^= CONNECTION_SIDE_MASK;
+        possible_connections.side_masks.top ^= CONNECTION_SIDE_MASK_CORNER_EXCLUDE;
     }
     else if (rows - 1 == ent_row)
     {
-        possible_connections.side_masks.bottom ^= CONNECTION_SIDE_MASK;
+        possible_connections.side_masks.bottom ^= CONNECTION_SIDE_MASK_CORNER_EXCLUDE;
+    }
+
+    // Check if we need to add corner connections, ie T0, T7, R0 etc...
+    for (size_t i = 0; i < MAX_NEIGHBOORS; i++)
+    {
+        size_t next = i + 1;
+        if (possible_connections.sides[i] && possible_connections.sides[(next & NEXT_SIDE_IDX_BIT_MASK)])
+        {
+            possible_connections.sides[i] |= SIDE_LAST_BIT_MASK;
+            possible_connections.sides[(next & NEXT_SIDE_IDX_BIT_MASK)] |= SIDE_FIRST_BIT_MASK;
+        }
     }
 
     // Filter tiles that have connections outside of possible
@@ -464,16 +475,6 @@ void D_Map::calculate_connections_and_add_visitors(std::pair<uint8_t, uint8_t> c
                                                    D_Connections &required_connections,
                                                    D_Connections &possible_connections)
 {
-    /*
-    !TODO:
-    We have an issue with choosing connections for large rooms. We are not adding related corners and sides to the
-    required and or possible masks. We need to ensure that when we add a corner on one side to a mask we add the related
-    corner to the same mask and then add all the other connections on that side to the possible mask. ie:
-        - T7 Required = R0 required + R1-6 possible
-        - T7 Possible = R0 possible + R1-6 possible
-    then check R7 and the other conners and do the same.
-     */
-
     distr.param(std::uniform_int_distribution<unsigned long>::param_type(0, ONE_HUNDRED_PERCENT));
 
     uint8_t current_col = current_point.first;
@@ -496,29 +497,64 @@ void D_Map::calculate_connections_and_add_visitors(std::pair<uint8_t, uint8_t> c
         }
         else if (distr(gen) <= connection_chance) // Give a chance to possibly connect in that direction
         {
-            possible_connections.sides[i] = CONNECTION_SIDE_MASK;
-            std::pair<uint8_t, uint8_t> n_pair = {n_col, n_row};
-            bool in_visit = false;
-            for (auto &&pair : to_visit)
-            {
-                if (pair == n_pair)
-                {
-                    in_visit = true;
-                    break;
-                }
-            }
-
-            if (!in_visit)
-            {
-                to_visit.push_back(n_pair);
-                LOG_DEBUG(std::format("Added col:{} row:{} to visit.", n_pair.first, n_pair.second));
-            }
+            possible_connections.sides[i] = CONNECTION_SIDE_MASK_CORNER_EXCLUDE;
         }
         else // Don't connect
         {
             required_connections.sides[i] = CONNECTION_ZERO_MASK;
         }
     }
+
+    /*! NOTE:Check if we need to add corner connections, ie T0, T7, R0 etc. Basicly if T7 is required then so is R0
+    along with that side's possible connections up to the next corner and if there are possible connections in adjacent
+    directions then both need the corner tiles added to the possible mask.*/
+    for (size_t i = 0; i < MAX_NEIGHBOORS; i++)
+    {
+        size_t next = i + 1;
+        if (required_connections.sides[i] & SIDE_LAST_BIT_MASK ||
+            required_connections.sides[(next & NEXT_SIDE_IDX_BIT_MASK)] & SIDE_FIRST_BIT_MASK)
+        {
+            required_connections.sides[i] |= SIDE_LAST_BIT_MASK;
+            required_connections.sides[(next & NEXT_SIDE_IDX_BIT_MASK)] |= SIDE_FIRST_BIT_MASK;
+            possible_connections.sides[i] |= CONNECTION_SIDE_MASK_CORNER_EXCLUDE;
+            possible_connections.sides[(next & NEXT_SIDE_IDX_BIT_MASK)] |= CONNECTION_SIDE_MASK_CORNER_EXCLUDE;
+        }
+        else if (possible_connections.sides[i] && possible_connections.sides[(next & NEXT_SIDE_IDX_BIT_MASK)])
+        {
+            possible_connections.sides[i] |= SIDE_LAST_BIT_MASK;
+            possible_connections.sides[(next & NEXT_SIDE_IDX_BIT_MASK)] |= SIDE_FIRST_BIT_MASK;
+        }
+    }
+
+    // Add the resulting possible connections to the to visit queue, required are not needed as the tile is already set
+    for (size_t i = 0; i < MAX_NEIGHBOORS; i++)
+    {
+        uint8_t n_col = current_col + static_cast<uint8_t>(TILE_NEIGHBOOR_OFFSETS[i].first);
+        uint8_t n_row = current_row + static_cast<uint8_t>(TILE_NEIGHBOOR_OFFSETS[i].second);
+        if (n_col >= cols || n_row >= rows || // is out of map bounds
+            !possible_connections.sides[i] || // has no possible connections
+            display_mat.at(n_col).at(n_row))  // or is already a set tile
+        {
+            continue;
+        }
+
+        std::pair<uint8_t, uint8_t> n_pair = {n_col, n_row};
+        bool in_visit = false;
+        for (auto &&pair : to_visit)
+        {
+            if (pair == n_pair)
+            {
+                in_visit = true;
+                break;
+            }
+        }
+        if (!in_visit)
+        {
+            to_visit.push_back(n_pair);
+            LOG_DEBUG(std::format("Added col:{} row:{} to visit.", n_pair.first, n_pair.second));
+        }
+    }
+
     LOG_DEBUG(std::format("Setting connections, possible mask = [{}], required mask = [{}]",
                           possible_connections.mask,
                           required_connections.mask));

@@ -39,8 +39,7 @@ target_link_libraries(D_Builder
 
 # Compile options
 if(CMAKE_BUILD_TYPE STREQUAL "debug")
-    target_link_libraries(D_Builder PRIVATE -fsanitize=address)
-    add_compile_options(-g -Wall -Wextra -Wshadow -Wunused -Wconversion -pedantic  -fdiagnostics-color=always -fsanitize=address)
+    add_compile_options(-g -Wall -Wextra -Wshadow -Wunused -Wconversion -pedantic  -fdiagnostics-color=always)
 elseif(CMAKE_BUILD_TYPE STREQUAL "release")
     add_compile_options(-O2 -fPIC -D_FORTIFY_SOURCE=2 -Wl,-z,relro -Wl,-z,now 
     -Wall -Wextra -Wshadow -Wunused -Wconversion -pedantic -fdiagnostics-color=always)
@@ -61,19 +60,20 @@ target_sources(D_Generation_Test
 target_include_directories(D_Generation_Test PRIVATE inc/)
 target_link_libraries(D_Generation_Test PRIVATE Qt6::Gui)
 
-if(CMAKE_BUILD_TYPE STREQUAL "debug")
-    target_link_libraries(D_Generation_Test PRIVATE -fsanitize=address)
-    target_compile_options(D_Generation_Test PRIVATE -g -Wall -Wextra -Wshadow -Wunused -Wconversion -pedantic -fdiagnostics-color=always -fsanitize=address)
-elseif(CMAKE_BUILD_TYPE STREQUAL "release")
-    target_compile_options(D_Generation_Test PRIVATE -O2 -fPIC -D_FORTIFY_SOURCE=2 -Wl,-z,relro -Wl,-z,now -Wall -Wextra -Wshadow -Wunused -Wconversion -pedantic -fdiagnostics-color=always)
-endif()
-
 # Get them tests running
 include(CTest)
 
-add_test(NAME generation_tests COMMAND D_Generation_Test)
-
-# TODO We need to add other stuff to the above test. such as valgrind
+# Add test suite with valgrind -> # -s = show suppressed errors
+add_test(NAME generation_tests
+    COMMAND valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose -s
+    $<TARGET_FILE:D_Generation_Test>
+)
+set_tests_properties(generation_tests
+    PROPERTIES 
+    TIMEOUT 0
+    PASS_REGULAR_EXPRESSION
+    ".*in use at exit: 0 bytes in 0 blocks.*0 errors from 0 contexts.*suppressed: 0 from 0.*"
+)
 
 #########################################################################
 #                           Installation Rules                          #
