@@ -74,11 +74,6 @@ class D_Map;
 #define DEFAULT_OUTPUT_QUALITY (100)
 
 /***********************************************************************************************************************
- * @brief The amount of times to test permutations for testing map generation.
- **********************************************************************************************************************/
-#define TEST_ITERATION_COUNT (100)
-
-/***********************************************************************************************************************
  * @brief Produces a std::format from the passed error message. Adds filename, function name, line and an ERR
  * identifier.
  * @param msg Message to be formated into the string.

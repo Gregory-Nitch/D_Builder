@@ -51,50 +51,31 @@ std::string Gen_Flag = GENERATE_IMG_CLI_COMMAND;
  **********************************************************************************************************************/
 void test_generations()
 {
-    //! TODO: We should change this into a while loop that checks if we have used every tile in the tile map
-    for (size_t i = 0; i < TEST_ITERATION_COUNT; i++)
+    std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> used_tiles;
+    used_tiles.reserve(Tile_Map.size());
+    size_t i = 0;
+    while (used_tiles.size() < Tile_Map.size())
     {
         Dungeon_Map->generate();
-        std::string file_name = std::format("{}Size-3x3_count{}.jpg", DEFAULT_TEST_OUTPUT_IMG_PATH, i);
-        if (!Dungeon_Map->save(file_name))
-            throw std::runtime_error(ERR_FORMAT("Failed saving map!"));
-        LOG_DEBUG(std::format("Map generated, filename = {}", file_name));
-    }
-
-    for (size_t i = 0; i < TEST_ITERATION_COUNT; i++)
-    {
-        Dungeon_Map->generate(5, 5, 80, Tile_Map);
-        std::string file_name = std::format("{}Size-5x5_count{}.jpg", DEFAULT_TEST_OUTPUT_IMG_PATH, i);
-        if (!Dungeon_Map->save(file_name))
-            throw std::runtime_error(ERR_FORMAT("Failed saving map!"));
-        LOG_DEBUG(std::format("Map generated, filename = {}", file_name));
-    }
-
-    for (size_t i = 0; i < TEST_ITERATION_COUNT; i++)
-    {
-        Dungeon_Map->generate(10, 10, 80, Tile_Map);
         std::string file_name = std::format("{}Size-10x10_count{}.jpg", DEFAULT_TEST_OUTPUT_IMG_PATH, i);
         if (!Dungeon_Map->save(file_name))
             throw std::runtime_error(ERR_FORMAT("Failed saving map!"));
+        i++;
         LOG_DEBUG(std::format("Map generated, filename = {}", file_name));
-    }
-
-    for (size_t i = 0; i < TEST_ITERATION_COUNT; i++)
-    {
-        Dungeon_Map->generate(15, 15, 80, Tile_Map);
-        std::string file_name = std::format("{}Size-15x15_count{}.jpg", DEFAULT_TEST_OUTPUT_IMG_PATH, i);
-        if (!Dungeon_Map->save(file_name))
-            throw std::runtime_error(ERR_FORMAT("Failed saving map!"));
-        LOG_DEBUG(std::format("Map generated, filename = {}", file_name));
-    }
-
-    for (size_t i = 0; i < TEST_ITERATION_COUNT; i++)
-    {
-        Dungeon_Map->generate(20, 20, 80, Tile_Map);
-        std::string file_name = std::format("{}Size-20x20_count{}.jpg", DEFAULT_TEST_OUTPUT_IMG_PATH, i);
-        if (!Dungeon_Map->save(file_name))
-            throw std::runtime_error(ERR_FORMAT("Failed saving map!"));
-        LOG_DEBUG(std::format("Map generated, filename = {}", file_name));
+        for (auto &&col : Dungeon_Map->get_display_mat())
+        {
+            for (auto &&tile : col)
+            {
+                if (!used_tiles.contains(tile->get_id()))
+                {
+                    auto emplace_pair = used_tiles.emplace(tile->get_id(), tile.get());
+                    if (!emplace_pair.second)
+                    {
+                        throw std::runtime_error(ERR_FORMAT("Failed emplacement into used map during map generations."));
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -109,7 +90,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
     D_Tile::load_tiles(img_dir, loaded_dir);
     D_Tile::generate_tiles();
 
-    Dungeon_Map = std::make_unique<D_Map>(3, 3, 80, Tile_Map);
+    Dungeon_Map = std::make_unique<D_Map>(10, 10, 80, Tile_Map);
 
     test_generations();
 
