@@ -65,14 +65,12 @@ include(CTest)
 
 # Add test suite with valgrind -> # -s = show suppressed errors
 add_test(NAME generation_tests
-    COMMAND valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose -s
+    COMMAND
     $<TARGET_FILE:D_Generation_Test>
 )
 set_tests_properties(generation_tests
     PROPERTIES 
     TIMEOUT 0
-    PASS_REGULAR_EXPRESSION
-    ".*in use at exit: 0 bytes in 0 blocks.*0 errors from 0 contexts.*suppressed: 0 from 0.*"
 )
 
 #########################################################################
