@@ -519,7 +519,22 @@ void D_Map::calculate_connections_and_add_visitors(std::pair<uint8_t, uint8_t> c
             possible_connections.sides[i] |= CONNECTION_SIDE_MASK_CORNER_EXCLUDE;
             possible_connections.sides[(next & NEXT_SIDE_IDX_BIT_MASK)] |= CONNECTION_SIDE_MASK_CORNER_EXCLUDE;
         }
-        else if (possible_connections.sides[i] && possible_connections.sides[(next & NEXT_SIDE_IDX_BIT_MASK)])
+
+        uint8_t corner_n_col = current_col + static_cast<uint8_t>(TILE_CORNER_NEIGHBOOR_OFFSETS[i].first);
+        uint8_t corner_n_row = current_row + static_cast<uint8_t>(TILE_CORNER_NEIGHBOOR_OFFSETS[i].second);
+        if (corner_n_col >= cols || corner_n_row >= rows) // Corner is out of map bounds
+            continue;
+
+        uint8_t n1_col = current_col + static_cast<uint8_t>(TILE_NEIGHBOOR_OFFSETS[i].first);
+        uint8_t n1_row = current_row + static_cast<uint8_t>(TILE_NEIGHBOOR_OFFSETS[i].second);
+        uint8_t n2_col = current_col + static_cast<uint8_t>(TILE_NEIGHBOOR_OFFSETS[next & NEXT_SIDE_IDX_BIT_MASK].first);
+        uint8_t n2_row = current_row + static_cast<uint8_t>(TILE_NEIGHBOOR_OFFSETS[next & NEXT_SIDE_IDX_BIT_MASK].second);
+        std::shared_ptr<D_Tile> n1_tile = display_mat.at(n1_col).at(n1_row);
+        std::shared_ptr<D_Tile> c_tile = display_mat.at(corner_n_col).at(corner_n_row);
+        std::shared_ptr<D_Tile> n2_tile = display_mat.at(n2_col).at(n2_row);
+        if (!c_tile && !n1_tile && !n2_tile &&
+            possible_connections.sides[i] &&
+            possible_connections.sides[(next & NEXT_SIDE_IDX_BIT_MASK)])
         {
             possible_connections.sides[i] |= SIDE_LAST_BIT_MASK;
             possible_connections.sides[(next & NEXT_SIDE_IDX_BIT_MASK)] |= SIDE_FIRST_BIT_MASK;

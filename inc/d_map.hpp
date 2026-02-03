@@ -65,6 +65,19 @@ constexpr std::array<std::pair<int8_t, int8_t>, 4> TILE_NEIGHBOOR_OFFSETS =
     }};
 
 /***********************************************************************************************************************
+ * @brief Corner neighboor offsets listed in a clockwise rotation, starting from Top Right for iteration during map
+ * generation. These are used when searching for possible corner connections.
+ **********************************************************************************************************************/
+constexpr std::array<std::pair<int8_t, int8_t>, 4> TILE_CORNER_NEIGHBOOR_OFFSETS =
+    {{
+        // {col, row}
+        {1, -1},  // Top right neighboor
+        {1, 1},   // Bottom right
+        {-1, 1},  // Bottom Left
+        {-1, -1}, // Top left
+    }};
+
+/***********************************************************************************************************************
  * @brief An array of indexs which will produce the neighbors opposing side index in the D_Connections union sides array.
  *
  * @warning This does NOT produce the side mask, it must be used to index into the sides array. @see D_Connections

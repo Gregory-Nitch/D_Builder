@@ -147,7 +147,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 
     LOG_DEBUG("Launching generation threads...");
     std::vector<std::thread> thread_pool;
-    for (size_t i = 0; i < 1; i++)
+    for (size_t i = 0; i < t; i++)
     {
         thread_pool.emplace_back(test_generations, i);
     }
