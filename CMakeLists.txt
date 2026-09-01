@@ -14,6 +14,7 @@ target_sources(D_Builder
               PRIVATE src/d_builder_common.cpp
               PRIVATE src/d_map.cpp
               PRIVATE src/d_tile.cpp
+              PRIVATE D_Builder.ui
             )
 
 target_include_directories(D_Builder PRIVATE inc/)

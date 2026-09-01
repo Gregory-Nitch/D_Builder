@@ -48,8 +48,8 @@ std::string Gen_Flag = GENERATE_IMG_CLI_COMMAND;
 int main(int argc, char **argv)
 {
     init_img_dirs();
-    std::filesystem::path img_dir(DEFAULT_INPUT_IMG_PATH);
-    std::filesystem::path loaded_dir(DEFAULT_SECTION_IMG_LOADED_PATH);
+    std::filesystem::path img_dir(DEFAULT_INPUT_IMG_PATH);             //! TODO: Need to handle subdirectory tile sets based on theme
+    std::filesystem::path loaded_dir(DEFAULT_SECTION_IMG_LOADED_PATH); //! TODO: Need to place loaded tiles in subdirectories based on theme
 
     std::cout << "Welcome to D_Builder" << std::endl;
 

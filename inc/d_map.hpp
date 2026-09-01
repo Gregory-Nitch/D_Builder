@@ -39,12 +39,12 @@
 /***********************************************************************************************************************
  * @brief Maximum amount of neighboors any tile will have.
  **********************************************************************************************************************/
-#define MAX_NEIGHBOORS (4)
+constexpr uint8_t MAX_NEIGHBOORS = 4;
 
 /***********************************************************************************************************************
  * @brief Represents 100%.
  **********************************************************************************************************************/
-#define ONE_HUNDRED_PERCENT (100)
+constexpr uint8_t ONE_HUNDRED_PERCENT = 100;
 
 /*
 ========================================================================================================================
@@ -82,7 +82,6 @@ constexpr std::array<std::pair<int8_t, int8_t>, 4> TILE_CORNER_NEIGHBOOR_OFFSETS
  *
  * @warning This does NOT produce the side mask, it must be used to index into the sides array. @see D_Connections
  **********************************************************************************************************************/
-
 constexpr std::array<uint8_t, 4> TILE_NEIGHBOOR_SIDE_IDX_MIRRORS =
     {
         2, // Current top idx becomes neighboor bottom idx, etc.
