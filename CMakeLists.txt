@@ -14,6 +14,7 @@ target_sources(D_Builder
               PRIVATE src/d_builder_common.cpp
               PRIVATE src/d_map.cpp
               PRIVATE src/d_tile.cpp
+              PRIVATE src/d_builder_ui.cpp
               PRIVATE D_Builder.ui
             )
 
@@ -22,7 +23,7 @@ target_include_directories(D_Builder PRIVATE inc/)
 # Qt stuff
 if(NOT CMAKE_PREFIX_PATH)
     message(STATUS "Using default Qt path...")
-    set(CMAKE_PREFIX_PATH "~/Repos/Qt/6.11/gcc_64/")
+    set(CMAKE_PREFIX_PATH "~/Repos/Qt/6.11.1/gcc_64/")
 else()
     message(STATUS "Using passed Qt path...")
 endif()
@@ -31,11 +32,12 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(Qt6 COMPONENTS Gui REQUIRED)
+find_package(Qt6 COMPONENTS Gui Widgets REQUIRED)
 
 target_link_libraries(D_Builder
     PRIVATE
     Qt6::Gui
+    Qt6::Widgets
 )
 
 # Compile options
@@ -59,7 +61,7 @@ target_sources(D_Generation_Test
 )
 
 target_include_directories(D_Generation_Test PRIVATE inc/)
-target_link_libraries(D_Generation_Test PRIVATE Qt6::Gui)
+target_link_libraries(D_Generation_Test PRIVATE Qt6::Gui Qt6::Widgets)
 
 # Get them tests running
 include(CTest)
