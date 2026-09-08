@@ -23,6 +23,11 @@
 #include <QSpinBox>
 #include <QPushButton>
 #include <QComboBox>
+#include <QGraphicsScene>
+#include <QGraphicsPixmapItem>
+#include <QPixmap>
+#include <QObject>
+#include <QEvent>
 
 /*
 ========================================================================================================================
@@ -30,12 +35,24 @@
 ========================================================================================================================
 */
 
+namespace Ui
+{
+    class MainWindow;
+}
+
 class DBuilderUI : public QMainWindow
 {
+    Q_OBJECT
+
 public:
     explicit DBuilderUI(QWidget *parent = nullptr);
     ~DBuilderUI();
-    privateSlots : void onGenerateButtonClicked();
+
+protected:
+    bool eventFilter(QObject *watched, QEvent *event) override;
+
+private slots:
+    void onGenerateButtonClicked();
     void onSaveButtonClicked();
     void onLoadTileSetButtonClicked();
     void onPercentConnectionChanged();
@@ -44,5 +61,10 @@ public:
     void onStyleChanged();
 
 private:
-    Ui::D_Builder *ui;
+    void updateBackgroundImage();
+
+    Ui::MainWindow *ui;
+    QGraphicsScene *graphicsViewScene;
+    QGraphicsPixmapItem *backgroundItem;
+    QPixmap backgroundImage;
 };

@@ -4,21 +4,8 @@ cmake_minimum_required(VERSION 3.22.1)
 # Set project name, version, description
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 project(D_Builder VERSION 1.0.0 DESCRIPTION "D_builder" LANGUAGES CXX)
-
-# Files to use
-add_executable(D_Builder src/d_builder.cpp)
-
-target_sources(D_Builder
-              PRIVATE src/d_builder.cpp
-              PRIVATE src/d_builder_common.cpp
-              PRIVATE src/d_map.cpp
-              PRIVATE src/d_tile.cpp
-              PRIVATE src/d_builder_ui.cpp
-              PRIVATE D_Builder.ui
-            )
-
-target_include_directories(D_Builder PRIVATE inc/)
 
 # Qt stuff
 if(NOT CMAKE_PREFIX_PATH)
@@ -31,8 +18,24 @@ endif()
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_CURRENT_SOURCE_DIR})
 
 find_package(Qt6 COMPONENTS Gui Widgets REQUIRED)
+
+# Files to use
+add_executable(D_Builder src/d_builder.cpp)
+
+target_sources(D_Builder
+              PRIVATE src/d_builder.cpp
+              PRIVATE src/d_builder_common.cpp
+              PRIVATE src/d_map.cpp
+              PRIVATE src/d_tile.cpp
+              PRIVATE src/d_builder_ui.cpp
+              PRIVATE inc/d_builder_ui.hpp
+              PRIVATE D_Builder.ui
+            )
+
+target_include_directories(D_Builder PRIVATE inc/)
 
 target_link_libraries(D_Builder
     PRIVATE

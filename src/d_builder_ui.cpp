@@ -18,8 +18,10 @@
 */
 
 #include "d_builder_ui.hpp"
+#include "ui_D_Builder.h" // Generated header for the D_Builder UI
 
-DBuilderUI::DBuilderUI(QWidget *parent) : QMainWindow(parent), ui(new Ui::DBuilderUI)
+DBuilderUI::DBuilderUI(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow), graphicsViewScene(new QGraphicsScene(this)),
+                                          backgroundItem(nullptr), backgroundImage("imgs/GUI_background/Anara.png")
 {
     ui->setupUi(this);
     connect(ui->GenerateButton, &QPushButton::clicked, this, &DBuilderUI::onGenerateButtonClicked);
@@ -29,11 +31,33 @@ DBuilderUI::DBuilderUI(QWidget *parent) : QMainWindow(parent), ui(new Ui::DBuild
     connect(ui->RowsSpinner, &QSpinBox::valueChanged, this, &DBuilderUI::onNumRowsCChanged);
     connect(ui->ColumnsSpinner, &QSpinBox::valueChanged, this, &DBuilderUI::onNumColsChanged);
     connect(ui->StyleComboBox, &QComboBox::currentTextChanged, this, &DBuilderUI::onStyleChanged);
+
+    backgroundItem = graphicsViewScene->addPixmap(backgroundImage);
+    ui->graphicsView->setScene(graphicsViewScene);
+    ui->graphicsView->installEventFilter(this);
+    updateBackgroundImage();
 }
 
 DBuilderUI::~DBuilderUI()
 {
     delete ui;
+}
+
+bool DBuilderUI::eventFilter(QObject *watched, QEvent *event)
+{
+    if (watched == ui->graphicsView && event->type() == QEvent::Resize)
+    {
+        updateBackgroundImage();
+    }
+    return QMainWindow::eventFilter(watched, event);
+}
+
+void DBuilderUI::updateBackgroundImage()
+{
+    const QSize viewSize = ui->graphicsView->viewport()->size();
+    graphicsViewScene->setSceneRect(0, 0, viewSize.width(), viewSize.height());
+    backgroundItem->setPixmap(backgroundImage.scaled(viewSize, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+    backgroundItem->setPos(0, 0);
 }
 
 void DBuilderUI::onGenerateButtonClicked()
