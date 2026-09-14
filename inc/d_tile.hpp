@@ -327,7 +327,7 @@ class D_Tile
 public:
     D_Tile(std::filesystem::path const &path);
     ~D_Tile();
-    static void load_tiles(std::filesystem::path const &dir_path, std::filesystem::path const &loaded_path = "");
+    static void load_tiles();
     static void generate_tiles();
     std::string const &get_name() const;
     std::string const &get_theme() const;

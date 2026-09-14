@@ -20,6 +20,7 @@
 #include <unordered_map>
 #include <string>
 #include <format>
+#include <iostream>
 
 /*
 ========================================================================================================================
@@ -40,53 +41,57 @@ class D_Map;
 /***********************************************************************************************************************
  * @brief CLI generation string to match to cli params.
  **********************************************************************************************************************/
-#define GENERATE_IMG_CLI_COMMAND "generate"
+constexpr const char *GENERATE_IMG_CLI_COMMAND = "generate";
 
 /***********************************************************************************************************************
  * @brief Default image directory path, will contain the input, loaded and output directories.
  **********************************************************************************************************************/
-#define DEFAULT_BASE_IMG_PATH "./imgs/"
+constexpr const char *DEFAULT_BASE_IMG_PATH = "./imgs/";
 
 /***********************************************************************************************************************
  * @brief Default input image path for the application, tiles are expected to be placed in this directory.
  **********************************************************************************************************************/
-#define DEFAULT_INPUT_IMG_PATH "./imgs/input/"
+constexpr const char *DEFAULT_INPUT_IMG_PATH = "./imgs/input/";
 
 /***********************************************************************************************************************
  * @brief Default D_Tile loaded path for the application, tiles are expected to move and save here on application start
  * and when new tiles have been generated.
  **********************************************************************************************************************/
-#define DEFAULT_SECTION_IMG_LOADED_PATH "./imgs/loaded/"
+constexpr const char *DEFAULT_SECTION_IMG_LOADED_PATH = "./imgs/loaded/";
 
 /***********************************************************************************************************************
  * @brief Default D_Map output path for the application, maps will be saved to this directory when requested.
  **********************************************************************************************************************/
-#define DEFAULT_OUTPUT_IMG_PATH "./imgs/output/"
+constexpr const char *DEFAULT_OUTPUT_IMG_PATH = "./imgs/output/";
 
 /***********************************************************************************************************************
  * @brief Default D_Map output path for the application, maps will be saved to this directory when requested.
  **********************************************************************************************************************/
-#define DEFAULT_TEST_OUTPUT_IMG_PATH "./imgs/TEST_output/"
+constexpr const char *DEFAULT_TEST_OUTPUT_IMG_PATH = "./imgs/TEST_output/";
 
 /***********************************************************************************************************************
  * @brief Standard output quality of images when saving.
  **********************************************************************************************************************/
-#define DEFAULT_OUTPUT_QUALITY (100)
+constexpr int DEFAULT_OUTPUT_QUALITY = 100;
 
 /***********************************************************************************************************************
  * @brief Produces a std::format from the passed error message. Adds filename, function name, line and an ERR
  * identifier.
  * @param msg Message to be formated into the string.
  **********************************************************************************************************************/
-#define ERR_FORMAT(msg) \
-    std::format("ERR:{}:{}:{}: {}", __FILE__, __func__, __LINE__, msg)
+constexpr auto ERR_FORMAT(const std::string &msg)
+{
+    return std::format("ERR:{}:{}:{}: {}", __FILE__, __func__, __LINE__, msg); //! TODO: change this to the logger
+}
 
 /***********************************************************************************************************************
  * @brief Prints the given message to std::cout along with filename, function name and line.
  * @param msg Message to be logged.
  **********************************************************************************************************************/
-#define LOG_DEBUG(msg) \
-    std::cout << "INF:" << __FILE__ << ":" << __func__ << ":" << __LINE__ << ":" << msg << std::endl
+constexpr void LOG_DEBUG(const std::string &msg)
+{
+    std::cout << "INF:" << __FILE__ << ":" << __func__ << ":" << __LINE__ << ":" << msg << std::endl; //! TODO: change this to the logger
+}
 
 /*
 ========================================================================================================================
@@ -125,6 +130,11 @@ extern std::unique_ptr<D_Map> Dungeon_Map;
  * @brief Variable to check against CLI param to denote that the application should generate tiles on start.
  **********************************************************************************************************************/
 extern std::string Gen_Flag;
+
+/***********************************************************************************************************************
+ * @brief A map that holds loaded directory mappings for tile themes.
+ **********************************************************************************************************************/
+extern std::unordered_map<std::string, std::filesystem::path> Loaded_Img_Dirs;
 
 /*
 ========================================================================================================================

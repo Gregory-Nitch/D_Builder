@@ -239,76 +239,81 @@ D_Tile::~D_Tile()
  * @note Does not generate permutations in the global maps, if that is required call generate_tiles. Doing so will also
  * create images for the application to use.
  **********************************************************************************************************************/
-void D_Tile::load_tiles(std::filesystem::path const &dir_path, std::filesystem::path const &loaded_path)
+void D_Tile::load_tiles()
 {
     LOG_DEBUG("Loading Tiles...");
-    if (dir_path.empty())
-        std::invalid_argument(ERR_FORMAT("Given empty path to loading function!"));
-
-    size_t tile_count = 0;
-    std::vector<std::shared_ptr<D_Tile>> tiles;
-    for (std::filesystem::directory_entry const &dir_entry : std::filesystem::directory_iterator{dir_path})
+    for (auto &&dir_set : Loaded_Img_Dirs)
     {
-        if (dir_entry.is_directory())
-            continue;
-        tile_count++;
-    }
+        std::filesystem::path const dir_path = std::filesystem::path(DEFAULT_INPUT_IMG_PATH) / dir_set.first;
+        std::filesystem::path const loaded_path = dir_set.second;
+        if (dir_path.empty())
+            throw std::invalid_argument(ERR_FORMAT("Given empty path to loading function!"));
 
-    std::stringstream ss;
-    ss << "Found ";
-    ss << tile_count;
-    ss << " input tiles.";
-    LOG_DEBUG(ss.str());
-
-    size_t entrance_count = 0;
-    size_t exit_count = 0;
-    Tile_Map.reserve(tile_count);
-    tiles.reserve(tile_count);
-    for (std::filesystem::directory_entry const &dir_entry : std::filesystem::directory_iterator{dir_path})
-    {
-        if (dir_entry.is_directory())
-            continue;
-        std::shared_ptr<D_Tile> tile = std::make_shared<D_Tile>(dir_entry.path());
-        if (!loaded_path.empty())
+        size_t tile_count = 0;
+        std::vector<std::shared_ptr<D_Tile>> tiles;
+        for (std::filesystem::directory_entry const &dir_entry : std::filesystem::directory_iterator{dir_path})
         {
-            tile->copy_tile_img(loaded_path);
+            if (dir_entry.is_directory())
+                continue;
+            tile_count++;
         }
-        //! NOTE: We only load the tile image after we have ensured it is in the proper directory.
-        tile->image = std::make_shared<QImage>(QString::fromStdString(tile->path.generic_string()));
-        tiles.push_back(tile);
 
-        if (tile->is_entrance())
-            entrance_count++;
-        if (tile->is_exit())
-            exit_count++;
-        if (!tile->get_connections().mask)
-            Empty_Tile = tile;
-    }
+        std::stringstream ss;
+        ss << "Found ";
+        ss << tile_count;
+        ss << " input tiles.";
+        LOG_DEBUG(ss.str());
 
-    Entrance_Map.reserve(entrance_count);
-    Exit_Map.reserve(exit_count);
-    for (auto tile : tiles)
-    {
-        std::pair<uint64_t, std::shared_ptr<D_Tile>> tile_pair = {tile->id, tile};
-        auto emplace_pair = Tile_Map.emplace(tile_pair);
-        if (!emplace_pair.second)
-            throw std::runtime_error(ERR_FORMAT("Failed placing a tile in the Tile_Map during loading!"));
-
-        if (tile->is_entrance())
+        size_t entrance_count = 0;
+        size_t exit_count = 0;
+        Tile_Map.reserve(tile_count);
+        tiles.reserve(tile_count);
+        for (std::filesystem::directory_entry const &dir_entry : std::filesystem::directory_iterator{dir_path})
         {
-            emplace_pair = Entrance_Map.emplace(tile_pair);
+            if (dir_entry.is_directory())
+                continue;
+            std::shared_ptr<D_Tile> tile = std::make_shared<D_Tile>(dir_entry.path());
+            if (!loaded_path.empty())
+            {
+                tile->copy_tile_img(loaded_path);
+            }
+            //! NOTE: We only load the tile image after we have ensured it is in the proper directory.
+            tile->image = std::make_shared<QImage>(QString::fromStdString(tile->path.generic_string()));
+            tiles.push_back(tile);
+
+            if (tile->is_entrance())
+                entrance_count++;
+            if (tile->is_exit())
+                exit_count++;
+            if (!tile->get_connections().mask)
+                Empty_Tile = tile;
+        }
+
+        Entrance_Map.reserve(entrance_count);
+        Exit_Map.reserve(exit_count);
+        for (auto tile : tiles)
+        {
+            std::pair<uint64_t, std::shared_ptr<D_Tile>> tile_pair = {tile->id, tile};
+            auto emplace_pair = Tile_Map.emplace(tile_pair);
             if (!emplace_pair.second)
-                throw std::runtime_error(ERR_FORMAT("Failed placing a tile in the Entrance_Map during loading!"));
-        }
+                throw std::runtime_error(ERR_FORMAT("Failed placing a tile in the Tile_Map during loading!"));
 
-        if (tile->is_exit())
-        {
-            emplace_pair = Exit_Map.emplace(tile_pair);
-            if (!emplace_pair.second)
-                throw std::runtime_error(ERR_FORMAT("Failed placing a tile in the Exit_Map during loading!"));
-        }
+            if (tile->is_entrance())
+            {
+                emplace_pair = Entrance_Map.emplace(tile_pair);
+                if (!emplace_pair.second)
+                    throw std::runtime_error(ERR_FORMAT("Failed placing a tile in the Entrance_Map during loading!"));
+            }
 
-        LOG_DEBUG(std::format("{}:{}", "Loaded Tile", tile->to_string()));
+            if (tile->is_exit())
+            {
+                emplace_pair = Exit_Map.emplace(tile_pair);
+                if (!emplace_pair.second)
+                    throw std::runtime_error(ERR_FORMAT("Failed placing a tile in the Exit_Map during loading!"));
+            }
+
+            LOG_DEBUG(std::format("{}:{}", "Loaded Tile", tile->to_string()));
+        }
     }
 }
 
@@ -322,7 +327,7 @@ void D_Tile::load_tiles(std::filesystem::path const &dir_path, std::filesystem::
  **********************************************************************************************************************/
 void D_Tile::generate_tiles()
 {
-    LOG_DEBUG("Generating Tiles...");
+    LOG_DEBUG("Generating Tiles..."); //! TODO: need to update saving logic for sub directory structure (also be sure to check that Tile path members are ok.)
 
     size_t entrance_count = 0;
     size_t exit_count = 0;

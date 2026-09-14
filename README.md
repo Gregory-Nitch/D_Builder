@@ -6,6 +6,9 @@ Desktop TTRPG dungeon builder
 - `cmake -CMAKE_BUILD_TYPE=<debug/release> ..`
 - `cmake --build .`
 
+## Testing
+- `ctest`
+
 ## Compile Commands Symbolic Link
 - `ln -s bld/compile_commands.json compile_commands.json`
 

@@ -38,6 +38,7 @@
 std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Tile_Map = {};
 std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Entrance_Map = {};
 std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Exit_Map = {};
+std::unordered_map<std::string, std::filesystem::path> Loaded_Img_Dirs = {};
 std::shared_ptr<D_Tile> Empty_Tile = nullptr;
 std::unique_ptr<D_Map> Dungeon_Map = nullptr;
 std::string Gen_Flag = GENERATE_IMG_CLI_COMMAND;
@@ -125,10 +126,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
     }
 
     init_img_dirs();
-    std::filesystem::path img_dir(DEFAULT_INPUT_IMG_PATH);
-    std::filesystem::path loaded_dir(DEFAULT_SECTION_IMG_LOADED_PATH);
+    std::filesystem::create_directories(DEFAULT_TEST_OUTPUT_IMG_PATH);
 
-    D_Tile::load_tiles(img_dir, loaded_dir);
+    D_Tile::load_tiles();
     D_Tile::generate_tiles();
 
     Used_Tiles.reserve(Tile_Map.size());

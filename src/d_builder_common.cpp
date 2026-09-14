@@ -33,9 +33,7 @@ void init_img_dirs(void)
     std::filesystem::path output_path = DEFAULT_OUTPUT_IMG_PATH;
 
     // check for input dir, check its not empty
-    if (!std::filesystem::exists(base_img_path) ||
-        !std::filesystem::exists(input_path) ||
-        !std::filesystem::is_directory(base_img_path) ||
+    if (!std::filesystem::is_directory(base_img_path) ||
         !std::filesystem::is_directory(input_path))
     {
         std::filesystem::create_directories(base_img_path);
@@ -47,16 +45,27 @@ void init_img_dirs(void)
         throw std::runtime_error(ERR_FORMAT(ss.str()));
     }
 
-    if (std::filesystem::is_empty(input_path))
+    size_t theme_count = 0;
+    for (const auto &entry : std::filesystem::directory_iterator(input_path))
     {
-        std::stringstream ss;
-        ss << "Image input directory is empty! You'll need to add images too ";
-        ss << DEFAULT_INPUT_IMG_PATH;
-        ss << '!';
-        throw std::runtime_error(ERR_FORMAT(ss.str()));
+        if (entry.is_directory())
+            theme_count++;
     }
+    LOG_DEBUG(std::format("Found {} themes in input directory.", theme_count));
 
     // create loaded and output if not present
     std::filesystem::create_directories(loaded_path);
     std::filesystem::create_directories(output_path);
+    Loaded_Img_Dirs.reserve(theme_count);
+    // Create sub folders in loaded path based on themes
+    for (const auto &entry : std::filesystem::directory_iterator(input_path))
+    {
+        if (!entry.is_directory())
+            continue;
+        std::string theme_name = entry.path().stem().string();
+        std::filesystem::path theme_subfolder = loaded_path / theme_name;
+        std::filesystem::create_directories(theme_subfolder);
+        Loaded_Img_Dirs.emplace(theme_name, theme_subfolder);
+        LOG_DEBUG(std::format("Created loaded subdirectory for theme: {}", theme_name));
+    }
 }
