@@ -49,12 +49,12 @@
 /***********************************************************************************************************************
  * @brief Max map size in both width and height, ie. 20x20.
  **********************************************************************************************************************/
-#define MAX_MAP_SIZE (20)
+constexpr uint8_t MAX_MAP_SIZE = (20);
 
 /***********************************************************************************************************************
  * @brief Min map size in both width and height, ie. 2x2.
  **********************************************************************************************************************/
-#define MIN_MAP_SIZE (2)
+constexpr uint8_t MIN_MAP_SIZE = (2);
 
 /*
 ========================================================================================================================
@@ -458,7 +458,8 @@ void D_Map::place_nodes()
         D_Connections possible_connections = {.mask = CONNECTION_ZERO_MASK};
         calculate_connections_and_add_visitors(current, required_connections, possible_connections);
         std::shared_ptr<D_Tile> chosen_tile = chose_tile_based_on_connections(required_connections,
-                                                                              possible_connections);
+                                                                              possible_connections,
+                                                                              theme_map);
         swap_tile(current.first, current.second, chosen_tile);
     }
 }
