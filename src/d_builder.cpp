@@ -18,6 +18,14 @@
 
 /*
 ========================================================================================================================
+- - 3rd Party Includes - -
+========================================================================================================================
+*/
+
+#include <QApplication>
+
+/*
+========================================================================================================================
 - - Local Includes - -
 ========================================================================================================================
 */
@@ -25,6 +33,7 @@
 #include "d_map.hpp"
 #include "d_tile.hpp"
 #include "d_builder_common.hpp"
+#include "d_builder_ui.hpp"
 
 /*
 ========================================================================================================================
@@ -50,11 +59,9 @@ int main(int argc, char **argv)
 
 {
     std::cout << "Welcome to D_Builder" << std::endl;
+    QApplication app(argc, argv);
 
     init_img_dirs();
-
-    std::filesystem::path img_dir(DEFAULT_INPUT_IMG_PATH);             //! TODO: Need to handle subdirectory tile sets based on theme
-    std::filesystem::path loaded_dir(DEFAULT_SECTION_IMG_LOADED_PATH); //! TODO: Need to place loaded tiles in subdirectories based on theme
 
     if (2 == argc && !Gen_Flag.compare(argv[1]))
     {
@@ -64,10 +71,12 @@ int main(int argc, char **argv)
     else // Only loading required.
     {
         LOG_DEBUG("Skipping tile generation...");
-        D_Tile::load_tiles();
+        D_Tile::load_tiles(DEFAULT_IMG_LOADED_ROOT_PATH);
     }
 
     Dungeon_Map = std::make_unique<D_Map>(3, 3, 50, Tile_Map);
+    DBuilderUI gui;
+    gui.show();
 
-    return EXIT_SUCCESS;
+    return app.exec();
 }

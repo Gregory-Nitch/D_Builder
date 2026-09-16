@@ -47,6 +47,12 @@ class DBuilderUI : public QMainWindow
 public:
     explicit DBuilderUI(QWidget *parent = nullptr);
     ~DBuilderUI();
+    void updateBackgroundImage();
+
+    Ui::MainWindow *ui;
+    QGraphicsScene *graphicsViewScene;
+    QGraphicsPixmapItem *backgroundItem;
+    QPixmap backgroundImage;
 
 protected:
     bool eventFilter(QObject *watched, QEvent *event) override;
@@ -59,12 +65,4 @@ private slots:
     void onNumRowsCChanged();
     void onNumColsChanged();
     void onStyleChanged();
-
-private:
-    void updateBackgroundImage();
-
-    Ui::MainWindow *ui;
-    QGraphicsScene *graphicsViewScene;
-    QGraphicsPixmapItem *backgroundItem;
-    QPixmap backgroundImage;
 };

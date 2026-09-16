@@ -29,7 +29,7 @@ void init_img_dirs(void)
 {
     std::filesystem::path base_img_path = DEFAULT_BASE_IMG_PATH;
     std::filesystem::path input_path = DEFAULT_INPUT_IMG_PATH;
-    std::filesystem::path loaded_path = DEFAULT_SECTION_IMG_LOADED_PATH;
+    std::filesystem::path loaded_path = DEFAULT_IMG_LOADED_ROOT_PATH;
     std::filesystem::path output_path = DEFAULT_OUTPUT_IMG_PATH;
 
     // check for input dir, check its not empty

@@ -232,26 +232,24 @@ D_Tile::~D_Tile()
  * @brief Loads all the tiles from a given directory, places them in the global map and then loads the acutal images as
  * QImages for each tile.
  *
- * @param[in] dir_path Directory path to a group of images to load.
- * @param[in] loaded_path Directory path to move the loaded images too. Defaults to an empty path incase we have already
- * copied and generated tiles in the loaded directory.
+ * @param[in] dir_path Directory path to a group of images to load, defaults to @see DEFAULT_INPUT_IMG_PATH.
  *
  * @note Does not generate permutations in the global maps, if that is required call generate_tiles. Doing so will also
  * create images for the application to use.
  **********************************************************************************************************************/
-void D_Tile::load_tiles()
+void D_Tile::load_tiles(std::filesystem::path const &dir_path)
 {
     LOG_DEBUG("Loading Tiles...");
     for (auto &&dir_set : Loaded_Img_Dirs)
     {
-        std::filesystem::path const dir_path = std::filesystem::path(DEFAULT_INPUT_IMG_PATH) / dir_set.first;
+        std::filesystem::path const sub_dir_path = std::filesystem::path(dir_path) / dir_set.first;
         std::filesystem::path const loaded_path = dir_set.second;
-        if (dir_path.empty())
+        if (sub_dir_path.empty())
             throw std::invalid_argument(ERR_FORMAT("Given empty path to loading function!"));
 
         size_t tile_count = 0;
         std::vector<std::shared_ptr<D_Tile>> tiles;
-        for (std::filesystem::directory_entry const &dir_entry : std::filesystem::directory_iterator{dir_path})
+        for (std::filesystem::directory_entry const &dir_entry : std::filesystem::directory_iterator{sub_dir_path})
         {
             if (dir_entry.is_directory())
                 continue;
@@ -268,7 +266,7 @@ void D_Tile::load_tiles()
         size_t exit_count = 0;
         Tile_Map.reserve(tile_count);
         tiles.reserve(tile_count);
-        for (std::filesystem::directory_entry const &dir_entry : std::filesystem::directory_iterator{dir_path})
+        for (std::filesystem::directory_entry const &dir_entry : std::filesystem::directory_iterator{sub_dir_path})
         {
             if (dir_entry.is_directory())
                 continue;
@@ -327,7 +325,7 @@ void D_Tile::load_tiles()
  **********************************************************************************************************************/
 void D_Tile::generate_tiles()
 {
-    LOG_DEBUG("Generating Tiles..."); //! TODO: need to update saving logic for sub directory structure (also be sure to check that Tile path members are ok.)
+    LOG_DEBUG("Generating Tiles...");
 
     size_t entrance_count = 0;
     size_t exit_count = 0;
@@ -838,13 +836,19 @@ bool D_Tile::generate_tile_img()
 
 /***********************************************************************************************************************
  * @brief Copies an image for a D_Tile from the image's path to the passed directory, this then udpates the tiles path
- * member.
+ * member but the function returns early if the image already exists at the new path is they are equivalent.
  *
  * @param[in] loaded_dir Directory to set as the new path member and move the tile image too.
  **********************************************************************************************************************/
 void D_Tile::copy_tile_img(std::filesystem::path loaded_dir)
 {
     std::filesystem::path new_path = loaded_dir / path.filename();
+    if (std::filesystem::exists(new_path) &&
+        std::filesystem::equivalent(new_path, path))
+    {
+        LOG_DEBUG(std::format("Tile image already exists at path and is equivalent: {} -> Skipping copy...", new_path.generic_string()));
+        return;
+    }
 
     try
     {

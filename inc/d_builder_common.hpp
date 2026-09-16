@@ -57,7 +57,7 @@ constexpr const char *DEFAULT_INPUT_IMG_PATH = "./imgs/input/";
  * @brief Default D_Tile loaded path for the application, tiles are expected to move and save here on application start
  * and when new tiles have been generated.
  **********************************************************************************************************************/
-constexpr const char *DEFAULT_SECTION_IMG_LOADED_PATH = "./imgs/loaded/";
+constexpr const char *DEFAULT_IMG_LOADED_ROOT_PATH = "./imgs/loaded/";
 
 /***********************************************************************************************************************
  * @brief Default D_Map output path for the application, maps will be saved to this directory when requested.
