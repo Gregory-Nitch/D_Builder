@@ -7,14 +7,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 project(D_Builder VERSION 1.0.0 DESCRIPTION "D_builder" LANGUAGES CXX)
 
-# Qt stuff
-if(NOT CMAKE_PREFIX_PATH)
-    message(STATUS "Using default Qt path...")
-    set(CMAKE_PREFIX_PATH "~/Repos/Qt/6.11.1/gcc_64/")
-else()
-    message(STATUS "Using passed Qt path...")
-endif()
-
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
@@ -36,11 +28,12 @@ target_sources(D_Builder
             )
 
 target_include_directories(D_Builder PRIVATE inc/)
-
+find_package(libcpp59 CONFIG REQUIRED)
 target_link_libraries(D_Builder
     PRIVATE
     Qt6::Gui
     Qt6::Widgets
+    libcpp59::libcpp59_logger
 )
 
 # Compile options
@@ -64,7 +57,10 @@ target_sources(D_Generation_Test
 )
 
 target_include_directories(D_Generation_Test PRIVATE inc/)
-target_link_libraries(D_Generation_Test PRIVATE Qt6::Gui Qt6::Widgets)
+target_link_libraries(D_Generation_Test PRIVATE 
+    Qt6::Gui
+    Qt6::Widgets
+    libcpp59::libcpp59_logger)
 
 # Get them tests running
 include(CTest)
