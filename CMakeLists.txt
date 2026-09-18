@@ -13,6 +13,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_CURRENT_SOURCE_DIR})
 
 find_package(Qt6 COMPONENTS Gui Widgets REQUIRED)
+find_package(libcpp59 CONFIG REQUIRED)
 
 # Files to use
 add_executable(D_Builder src/d_builder.cpp)
@@ -28,7 +29,6 @@ target_sources(D_Builder
             )
 
 target_include_directories(D_Builder PRIVATE inc/)
-find_package(libcpp59 CONFIG REQUIRED)
 target_link_libraries(D_Builder
     PRIVATE
     Qt6::Gui
