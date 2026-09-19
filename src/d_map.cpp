@@ -81,12 +81,12 @@ D_Map::D_Map(uint8_t in_cols,
         in_rows < MIN_MAP_SIZE)
     {
         Logger.log(libcpp59::log_level::ERR, "Invalid sizes given to D_Map: Sizes must be between 2-20 inclusive!");
-        throw std::invalid_argument("");
+        throw std::invalid_argument("Invalid sizes given to D_Map: Sizes must be between 2-20 inclusive!");
     }
     if (usable_tiles.empty())
     {
         Logger.log(libcpp59::log_level::ERR, "Usable tiles not given to the D_Map during construction!");
-        throw std::invalid_argument("");
+        throw std::invalid_argument("Usable tiles not given to the D_Map during construction!");
     }
 
     cols = in_cols;
@@ -139,12 +139,12 @@ void D_Map::generate(uint8_t in_cols,
         in_rows < MIN_MAP_SIZE)
     {
         Logger.log(libcpp59::log_level::ERR, "Invalid sizes given to D_Map::generate(): Sizes must be between 2-20 inclusive!");
-        throw std::invalid_argument("");
+        throw std::invalid_argument("Invalid sizes given to D_Map::generate(): Sizes must be between 2-20 inclusive!");
     }
     if (usable_tiles.empty())
     {
         Logger.log(libcpp59::log_level::ERR, "Usable tiles were empty when calling D_Map::generate(params)!");
-        throw std::invalid_argument("");
+        throw std::invalid_argument("Usable tiles were empty when calling D_Map::generate(params)!");
     }
 
     cols = in_cols;
@@ -344,7 +344,7 @@ void D_Map::start_generation_at_entrance()
             << " Possible connections were = int_mask:[" << possible_connections.mask << "]"
             << to_string();
         Logger.log(libcpp59::log_level::ERR, err.str());
-        throw std::runtime_error("");
+        throw std::runtime_error(err.str());
     }
 
     distr.param(std::uniform_int_distribution<unsigned long>::param_type(0, tile_canidates.size() - 1UL));
@@ -441,7 +441,7 @@ std::shared_ptr<D_Tile> D_Map::chose_tile_based_on_connections(D_Connections req
             << " Possible connections were = int_mask:[" << possible_connections.mask << "]"
             << to_string();
         Logger.log(libcpp59::log_level::ERR, err.str());
-        throw std::runtime_error("");
+        throw std::runtime_error(err.str());
     }
 
     distr.param(std::uniform_int_distribution<unsigned long>::param_type(0, tile_canidates.size() - 1UL));
@@ -591,7 +591,7 @@ void D_Map::fill_empty_tiles()
     if (!Empty_Tile)
     {
         Logger.log(libcpp59::log_level::ERR, "Empty Tile was null!");
-        throw std::runtime_error("");
+        throw std::runtime_error("Empty Tile was null!");
     }
 
     for (uint8_t col = 0; col < cols; col++)
