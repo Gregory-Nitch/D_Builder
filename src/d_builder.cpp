@@ -59,7 +59,7 @@ libcpp59::logger Logger = {};
 int main(int argc, char **argv)
 
 {
-    std::cout << "Welcome to D_Builder" << std::endl;
+    Logger.log(libcpp59::log_level::INFO, "Welcome to D_Builder.");
     QApplication app(argc, argv);
 
     init_img_dirs();
@@ -71,7 +71,7 @@ int main(int argc, char **argv)
     }
     else // Only loading required.
     {
-        LOG_DEBUG("Skipping tile generation...");
+        Logger.log(libcpp59::log_level::INFO, "Skipping tile generation.");
         D_Tile::load_tiles(DEFAULT_IMG_LOADED_ROOT_PATH);
     }
 

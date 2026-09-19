@@ -42,6 +42,7 @@ std::unordered_map<std::string, std::filesystem::path> Loaded_Img_Dirs = {};
 std::shared_ptr<D_Tile> Empty_Tile = nullptr;
 std::unique_ptr<D_Map> Dungeon_Map = nullptr;
 std::string Gen_Flag = GENERATE_IMG_CLI_COMMAND;
+libcpp59::logger Logger = {};
 std::atomic<uint64_t> G = 0;
 uint64_t G_MAX = UINT64_MAX;
 
@@ -82,16 +83,19 @@ Lockable_Map Used_Tiles;
  **********************************************************************************************************************/
 void test_generations(size_t t_number)
 {
-    LOG_DEBUG(std::format("Starting thread[{}]", t_number));
+    Logger.log(libcpp59::log_level::DEBUG, std::format("Starting thread[{}]", t_number));
+
     D_Map d_map(5, 5, 80, Tile_Map);
     while (Used_Tiles.size() < Tile_Map.size() && G < G_MAX)
     {
         d_map.generate();
         uint64_t current_g = G.fetch_add(1);
         std::string file_name = std::format("{}Size-10x10_G{}.jpg", DEFAULT_TEST_OUTPUT_IMG_PATH, current_g);
+
         if (!d_map.save(file_name))
-            throw std::runtime_error(ERR_FORMAT("Failed saving map!"));
-        LOG_DEBUG(std::format("Map generated, filename = {}", file_name));
+            Logger.log(libcpp59::log_level::ERR, "Failed saving map!");
+
+        Logger.log(libcpp59::log_level::DEBUG, std::format("Map generated, filename = {}", file_name));
         for (auto &&col : d_map.get_display_mat())
         {
             for (auto &&tile : col)
@@ -100,13 +104,13 @@ void test_generations(size_t t_number)
             }
         }
     }
-    LOG_DEBUG(std::format("Ending thread[{}]", t_number));
+    Logger.log(libcpp59::log_level::DEBUG, std::format("Ending thread[{}]", t_number));
 }
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 {
-    std::cout << "- - - - Start D_Builder TEST - - - -" << std::endl;
-
+    Logger.set_log_level(libcpp59::log_level::DEBUG);
+    Logger.log(libcpp59::log_level::INFO, "- - - - Start D_Builder TEST - - - -");
     if (argc == 2)
     {
         try
@@ -115,12 +119,12 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
         }
         catch (const std::invalid_argument &e)
         {
-            std::cerr << ERR_FORMAT("Invalid given as generation amount.") << std::endl;
+            Logger.log(libcpp59::log_level::ERR, std::format("Invalid value given as generation amount: {}", argv[1]));
             return EXIT_FAILURE;
         }
         catch (const std::out_of_range &e)
         {
-            std::cerr << ERR_FORMAT("Given number is to large for size_t.") << std::endl;
+            Logger.log(libcpp59::log_level::ERR, std::format("Given number is too large for size_t: {}", argv[1]));
             return EXIT_FAILURE;
         }
     }
@@ -137,22 +141,22 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
     unsigned int t = std::thread::hardware_concurrency();
     if (t == 0)
     {
-        LOG_DEBUG("Unable to detect available thread count, defaulting to 4.");
+        Logger.log(libcpp59::log_level::DEBUG, "Unable to detect available thread count, defaulting to 4.");
         t = 4;
     }
     else
     {
-        LOG_DEBUG(std::format("Assuming {} available threads.", t));
+        Logger.log(libcpp59::log_level::DEBUG, std::format("Assuming {} available threads.", t));
     }
 
-    LOG_DEBUG("Launching generation threads...");
+    Logger.log(libcpp59::log_level::INFO, "Launching generation threads...");
     std::vector<std::thread> thread_pool;
     for (size_t i = 0; i < t; i++)
     {
         thread_pool.emplace_back(test_generations, i);
     }
 
-    LOG_DEBUG("Awaiting generation termination...");
+    Logger.log(libcpp59::log_level::INFO, "Awaiting generation termination...");
     for (auto &thread : thread_pool)
     {
         if (thread.joinable())
@@ -160,7 +164,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
             thread.join();
         }
     }
-    LOG_DEBUG(std::format("Generation threads rejoined. {}/{} Tiles Used", Used_Tiles.size(), Tile_Map.size()));
+    Logger.log(libcpp59::log_level::DEBUG, std::format("Generation threads rejoined. {}/{} Tiles Used", Used_Tiles.size(), Tile_Map.size()));
 
     return EXIT_SUCCESS;
 }

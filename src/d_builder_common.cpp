@@ -42,7 +42,8 @@ void init_img_dirs(void)
         ss << "Required image input directories are missing! I've created them for you but you still have no images in ";
         ss << DEFAULT_INPUT_IMG_PATH;
         ss << '!';
-        throw std::runtime_error(ERR_FORMAT(ss.str()));
+        Logger.log(libcpp59::log_level::ERR, ss.str());
+        throw std::runtime_error(ss.str());
     }
 
     size_t theme_count = 0;
@@ -51,7 +52,7 @@ void init_img_dirs(void)
         if (entry.is_directory())
             theme_count++;
     }
-    LOG_DEBUG(std::format("Found {} themes in input directory.", theme_count));
+    Logger.log(libcpp59::log_level::DEBUG, std::format("Found {} themes in input directory.", theme_count));
 
     // create loaded and output if not present
     std::filesystem::create_directories(loaded_path);
@@ -66,6 +67,6 @@ void init_img_dirs(void)
         std::filesystem::path theme_subfolder = loaded_path / theme_name;
         std::filesystem::create_directories(theme_subfolder);
         Loaded_Img_Dirs.emplace(theme_name, theme_subfolder);
-        LOG_DEBUG(std::format("Created loaded subdirectory for theme: {}", theme_name));
+        Logger.log(libcpp59::log_level::DEBUG, std::format("Created loaded subdirectory for theme: {}", theme_name));
     }
 }

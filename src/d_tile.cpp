@@ -147,7 +147,10 @@ std::atomic<uint64_t> D_Tile::id_counter{0};
 D_Tile::D_Tile(std::filesystem::path const &in_path)
 {
     if (in_path.filename().generic_string().empty())
-        throw std::invalid_argument(ERR_FORMAT("Empty filename in path given to D_Tile()!"));
+    {
+        Logger.log(libcpp59::log_level::ERR, "Empty filename in path given to D_Tile()!");
+        throw std::invalid_argument("Empty filename in path given to D_Tile()!");
+    }
 
     std::vector<std::string> file_tokens;
     std::string file_token;
@@ -179,7 +182,8 @@ D_Tile::D_Tile(std::filesystem::path const &in_path)
     {
         err << "No file type in file path!";
         err << to_string();
-        throw std::invalid_argument(ERR_FORMAT(err.str()));
+        Logger.log(libcpp59::log_level::ERR, err.str());
+        throw std::invalid_argument("No file type in file path!");
     }
     file_tokens.at(TILE_FLIP_FLG_IDX) = file_tokens.at(TILE_FLIP_FLG_IDX).erase(idx);
 
@@ -198,25 +202,29 @@ D_Tile::D_Tile(std::filesystem::path const &in_path)
     {
         err << "Tile name found to be empty at end of D_Tile()!:";
         err << to_string();
-        throw std::invalid_argument(ERR_FORMAT(err.str()));
+        Logger.log(libcpp59::log_level::ERR, err.str());
+        throw std::invalid_argument("Tile name found to be empty at end of D_Tile()!");
     }
     if (theme.empty())
     {
         err << "Tile theme found to be empty at end of D_Tile!:";
         err << to_string();
-        throw std::invalid_argument(ERR_FORMAT(err.str()));
+        Logger.log(libcpp59::log_level::ERR, err.str());
+        throw std::invalid_argument("Tile theme found to be empty at end of D_Tile()!");
     }
     if (is_entrance() && is_exit())
     {
         err << "A tile cannot be both an entrance and an exit!:";
         err << to_string();
-        throw std::invalid_argument(ERR_FORMAT(err.str()));
+        Logger.log(libcpp59::log_level::ERR, err.str());
+        throw std::invalid_argument("A tile cannot be both an entrance and an exit!");
     }
     if (is_flippable() && !is_permutateable())
     {
         err << "A tile cannot be flippable and not be permutateable!:";
         err << to_string();
-        throw std::invalid_argument(ERR_FORMAT(err.str()));
+        Logger.log(libcpp59::log_level::ERR, err.str());
+        throw std::invalid_argument("A tile cannot be flippable and not be permutateable!");
     }
 }
 
@@ -239,13 +247,16 @@ D_Tile::~D_Tile()
  **********************************************************************************************************************/
 void D_Tile::load_tiles(std::filesystem::path const &dir_path)
 {
-    LOG_DEBUG("Loading Tiles...");
+    Logger.log(libcpp59::log_level::INFO, "Loading Tiles...");
     for (auto &&dir_set : Loaded_Img_Dirs)
     {
         std::filesystem::path const sub_dir_path = std::filesystem::path(dir_path) / dir_set.first;
         std::filesystem::path const loaded_path = dir_set.second;
         if (sub_dir_path.empty())
-            throw std::invalid_argument(ERR_FORMAT("Given empty path to loading function!"));
+        {
+            Logger.log(libcpp59::log_level::ERR, "Given empty path to loading function!");
+            throw std::invalid_argument("Given empty path to loading function!");
+        }
 
         size_t tile_count = 0;
         std::vector<std::shared_ptr<D_Tile>> tiles;
@@ -260,7 +271,7 @@ void D_Tile::load_tiles(std::filesystem::path const &dir_path)
         ss << "Found ";
         ss << tile_count;
         ss << " input tiles.";
-        LOG_DEBUG(ss.str());
+        Logger.log(libcpp59::log_level::DEBUG, ss.str());
 
         size_t entrance_count = 0;
         size_t exit_count = 0;
@@ -294,23 +305,32 @@ void D_Tile::load_tiles(std::filesystem::path const &dir_path)
             std::pair<uint64_t, std::shared_ptr<D_Tile>> tile_pair = {tile->id, tile};
             auto emplace_pair = Tile_Map.emplace(tile_pair);
             if (!emplace_pair.second)
-                throw std::runtime_error(ERR_FORMAT("Failed placing a tile in the Tile_Map during loading!"));
+            {
+                Logger.log(libcpp59::log_level::ERR, "Failed placing a tile in the Tile_Map during loading!");
+                throw std::runtime_error("Failed placing a tile in the Tile_Map during loading!");
+            }
 
             if (tile->is_entrance())
             {
                 emplace_pair = Entrance_Map.emplace(tile_pair);
                 if (!emplace_pair.second)
-                    throw std::runtime_error(ERR_FORMAT("Failed placing a tile in the Entrance_Map during loading!"));
+                {
+                    Logger.log(libcpp59::log_level::ERR, "Failed placing a tile in the Entrance_Map during loading!");
+                    throw std::runtime_error("Failed placing a tile in the Entrance_Map during loading!");
+                }
             }
 
             if (tile->is_exit())
             {
                 emplace_pair = Exit_Map.emplace(tile_pair);
                 if (!emplace_pair.second)
-                    throw std::runtime_error(ERR_FORMAT("Failed placing a tile in the Exit_Map during loading!"));
+                {
+                    Logger.log(libcpp59::log_level::ERR, "Failed placing a tile in the Exit_Map during loading!");
+                    throw std::runtime_error("Failed placing a tile in the Exit_Map during loading!");
+                }
             }
 
-            LOG_DEBUG(std::format("{}:{}", "Loaded Tile", tile->to_string()));
+            Logger.log(libcpp59::log_level::DEBUG, std::format("Loaded Tile:{}", tile->to_string()));
         }
     }
 }
@@ -325,7 +345,7 @@ void D_Tile::load_tiles(std::filesystem::path const &dir_path)
  **********************************************************************************************************************/
 void D_Tile::generate_tiles()
 {
-    LOG_DEBUG("Generating Tiles...");
+    Logger.log(libcpp59::log_level::INFO, "Generating Tiles...");
 
     size_t entrance_count = 0;
     size_t exit_count = 0;
@@ -340,7 +360,10 @@ void D_Tile::generate_tiles()
             permutate(tile, permutations, entrance_count, exit_count);
         }
         else if (nullptr == tile)
-            throw std::runtime_error(ERR_FORMAT("Found nullptr in tile global map!"));
+        {
+            Logger.log(libcpp59::log_level::ERR, "Found nullptr in tile global map!");
+            throw std::runtime_error("Found nullptr in tile global map!");
+        }
     }
 
     // Generate images and load them to the global map.
@@ -360,7 +383,8 @@ void D_Tile::generate_tiles()
         if (!emplace_pair.second)
         {
             err << tile->to_string() << ":Failed placing a permutation in the Tile_Map during permutation!";
-            throw std::runtime_error(ERR_FORMAT(err.str()));
+            Logger.log(libcpp59::log_level::ERR, err.str());
+            throw std::runtime_error(err.str());
         }
 
         if (tile->is_entrance())
@@ -369,7 +393,8 @@ void D_Tile::generate_tiles()
             if (!emplace_pair.second)
             {
                 err << tile->to_string() << ":Failed placing a permutation in the Entrance_Map during permutation!";
-                throw std::runtime_error(ERR_FORMAT(err.str()));
+                Logger.log(libcpp59::log_level::ERR, err.str());
+                throw std::runtime_error(err.str());
             }
         }
         else if (tile->is_exit())
@@ -378,11 +403,12 @@ void D_Tile::generate_tiles()
             if (!emplace_pair.second)
             {
                 err << tile->to_string() << ":Failed placing a permutation in the Exit_Map during permutation!";
-                throw std::runtime_error(ERR_FORMAT(err.str()));
+                Logger.log(libcpp59::log_level::ERR, err.str());
+                throw std::runtime_error(err.str());
             }
         }
 
-        LOG_DEBUG(std::format("{}:{}", "Permutated Tile:", tile->to_string()));
+        Logger.log(libcpp59::log_level::DEBUG, std::format("Permutated Tile:{}", tile->to_string()));
     }
 }
 
@@ -573,14 +599,19 @@ D_Tile::D_Tile(std::string permutation_name,
                bool permutation_is_flippable_flag)
 {
     if (permutation_name.empty())
-        throw std::invalid_argument(ERR_FORMAT("Permutating tile was given an empty name!"));
+    {
+        Logger.log(libcpp59::log_level::ERR, "Permutating tile was given an empty name!");
+        throw std::invalid_argument("Permutating tile was given an empty name!");
+    }
     if (permutation_theme.empty())
-        throw std::invalid_argument(ERR_FORMAT("Permutating tile was given an empty theme!"));
+    {
+        Logger.log(libcpp59::log_level::ERR, "Permutating tile was given an empty theme!");
+        throw std::invalid_argument("Permutating tile was given an empty theme!");
+    }
     if (Tile_Map.contains(permutation_id))
     {
-        std::string err("Permutating tile was given an id that is already in use!");
-        err.append(std::format(" ID was{}", permutation_id));
-        throw std::invalid_argument(ERR_FORMAT(err));
+        Logger.log(libcpp59::log_level::ERR, std::format("Permutating tile was given an id that is already in use! ID was{}", permutation_id));
+        throw std::invalid_argument("Permutating tile was given an id that is already in use!");
     }
 
     name = permutation_name;
@@ -620,16 +651,16 @@ inline void D_Tile::map_connection_tokens(std::vector<std::string> connection_to
             err << "Tile has an invalid connection in its connection list![Tile]:";
             err << to_string();
             err << "[Connection]:" << con;
-            throw std::invalid_argument(ERR_FORMAT(err.str()));
+            Logger.log(libcpp59::log_level::ERR, err.str());
+            throw std::invalid_argument("Tile has an invalid connection in its connection list!");
         }
     }
 
     // If we have reached here and have no connections we've had an error.
     if (!connections.mask)
     {
-        std::string err("Tile has no valid connections in its connection list!:[Tile]:");
-        err.append(to_string());
-        throw std::invalid_argument(ERR_FORMAT(err));
+        Logger.log(libcpp59::log_level::ERR, std::format("Tile has no valid connections in its connection list!:[Tile]:{}", to_string()));
+        throw std::invalid_argument("Tile has no valid connections in its connection list!");
     }
 }
 
@@ -649,7 +680,10 @@ inline void D_Tile::permutate(std::shared_ptr<D_Tile> permutateable,
                               size_t &exit_count)
 { /*! IMPROVEMENT:We may be able to move tile rotation processing into another function for refactoring.*/
     if (nullptr == permutateable)
-        throw std::invalid_argument(ERR_FORMAT("Encountered a nullptr while trying to permutate a tile!"));
+    {
+        Logger.log(libcpp59::log_level::ERR, "Encountered a nullptr while trying to permutate a tile!");
+        throw std::invalid_argument("Encountered a nullptr while trying to permutate a tile!");
+    }
 
     size_t permutation_limiter = ROTATION_ARR.size();
     if (permutateable->connections.mask == rotate_connections(Connection_Rotations::One_Eighty, permutateable->connections).mask)
@@ -657,9 +691,7 @@ inline void D_Tile::permutate(std::shared_ptr<D_Tile> permutateable,
         permutation_limiter = ROTATION_ARR.size() - 2;
     }
 
-    std::stringstream ss;
-    ss << "Permutating Tile:" << permutateable->to_string();
-    LOG_DEBUG(ss.str());
+    Logger.log(libcpp59::log_level::DEBUG, std::format("Permutating Tile:{}", permutateable->to_string()));
 
     if (permutateable->is_flippable())
     {
@@ -799,7 +831,11 @@ inline std::string const D_Tile::to_filename()
 bool D_Tile::generate_tile_img()
 {
     if (!image || image->isNull())
-        throw std::invalid_argument(ERR_FORMAT("Null image reference found when generating a tile image!"));
+    {
+
+        Logger.log(libcpp59::log_level::ERR, std::format("Null image reference found when generating a tile image! Tile path: {}", path.generic_string()));
+        throw std::invalid_argument("Null image reference found when generating a tile image!");
+    }
 
     QTransform matrix;
     double degrees = 0.0;
@@ -846,7 +882,7 @@ void D_Tile::copy_tile_img(std::filesystem::path loaded_dir)
     if (std::filesystem::exists(new_path) &&
         std::filesystem::equivalent(new_path, path))
     {
-        LOG_DEBUG(std::format("Tile image already exists at path and is equivalent: {} -> Skipping copy...", new_path.generic_string()));
+        Logger.log(libcpp59::log_level::DEBUG, std::format("Tile image already exists at path and is equivalent: {} -> Skipping copy...", new_path.generic_string()));
         return;
     }
 
@@ -854,12 +890,13 @@ void D_Tile::copy_tile_img(std::filesystem::path loaded_dir)
     {
         std::filesystem::copy(path, new_path, std::filesystem::copy_options::overwrite_existing);
     }
-    catch (std::filesystem::filesystem_error &fs_e)
+    catch (std::filesystem::filesystem_error const &fs_e)
     {
         std::stringstream err;
         err << "Unable to copy tile image. Filesystem error was: ";
         err << fs_e.what();
-        throw std::runtime_error(ERR_FORMAT(err.str()));
+        Logger.log(libcpp59::log_level::ERR, err.str());
+        throw;
     }
 
     path = new_path;
