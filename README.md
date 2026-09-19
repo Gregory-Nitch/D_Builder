@@ -30,3 +30,10 @@ Desktop TTRPG dungeon builder
 - Vulkan (For Qt)
   - Ubuntu : `sudo apt install libvulkan-dev`
 - maybe SQLite later on
+
+# A Note on Large Qt Images
+- Max allocation has been set to 1024 but if you need an overide you could execute with:
+  - `QT_IMAGEIO_MAXALLOC=<allocation_amount_here> ./D_Builder`
+
+# Hardware Requirements
+- With a minimal tile set and after loading btop reported 1.9Gb of memory usage. For larger and multiple tile sets this will increase, expect something like 4~5Gb as a possiblity.

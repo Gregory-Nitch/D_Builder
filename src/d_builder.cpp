@@ -27,6 +27,7 @@
 #include <QApplication>
 #include <QCoreApplication>
 #include <QEventLoop>
+#include <QImageReader>
 #include <QProgressDialog>
 
 /*
@@ -66,6 +67,7 @@ int main(int argc, char **argv)
 {
     Logger.log(libcpp59::log_level::INFO, "Welcome to D_Builder.");
     QApplication app(argc, argv);
+    QImageReader::setAllocationLimit(1024);
 
     init_img_dirs();
     QProgressDialog tile_progress;
@@ -99,11 +101,11 @@ int main(int argc, char **argv)
         Logger.log(libcpp59::log_level::INFO, "Skipping tile generation.");
         D_Tile::load_tiles(DEFAULT_IMG_LOADED_ROOT_PATH, update_tile_progress);
     }
-    tile_progress.close();
 
     Dungeon_Map = std::make_unique<D_Map>(3, 3, 50, Tile_Map);
     DBuilderUI gui;
     gui.show();
+    tile_progress.close();
 
     return app.exec();
 }

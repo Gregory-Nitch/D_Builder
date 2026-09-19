@@ -20,6 +20,9 @@
 #include "d_builder_ui.hpp"
 #include "ui_D_Builder.h" // Generated header for the D_Builder UI
 
+#include <QFrame>
+#include <QTimer>
+
 DBuilderUI::DBuilderUI(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow), graphicsViewScene(new QGraphicsScene(this)),
                                           backgroundItem(nullptr), backgroundImage("imgs/GUI_background/Anara.png")
 {
@@ -34,8 +37,11 @@ DBuilderUI::DBuilderUI(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     backgroundItem = graphicsViewScene->addPixmap(backgroundImage);
     ui->graphicsView->setScene(graphicsViewScene);
-    ui->graphicsView->installEventFilter(this);
-    updateBackgroundImage();
+    ui->graphicsView->setFrameShape(QFrame::NoFrame);
+    ui->graphicsView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->graphicsView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->graphicsView->viewport()->installEventFilter(this);
+    QTimer::singleShot(0, this, &DBuilderUI::updateBackgroundImage);
 }
 
 DBuilderUI::~DBuilderUI()
@@ -45,7 +51,7 @@ DBuilderUI::~DBuilderUI()
 
 bool DBuilderUI::eventFilter(QObject *watched, QEvent *event)
 {
-    if (watched == ui->graphicsView && event->type() == QEvent::Resize)
+    if (watched == ui->graphicsView->viewport() && event->type() == QEvent::Resize)
     {
         updateBackgroundImage();
     }
@@ -55,9 +61,15 @@ bool DBuilderUI::eventFilter(QObject *watched, QEvent *event)
 void DBuilderUI::updateBackgroundImage()
 {
     const QSize viewSize = ui->graphicsView->viewport()->size();
+    if (viewSize.isEmpty())
+        return;
+
+    const QPixmap scaledBackground = backgroundImage.scaled(viewSize, Qt::KeepAspectRatioByExpanding,
+                                                            Qt::SmoothTransformation);
     graphicsViewScene->setSceneRect(0, 0, viewSize.width(), viewSize.height());
-    backgroundItem->setPixmap(backgroundImage.scaled(viewSize, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
-    backgroundItem->setPos(0, 0);
+    backgroundItem->setPixmap(scaledBackground);
+    backgroundItem->setPos((viewSize.width() - scaledBackground.width()) / 2,
+                           (viewSize.height() - scaledBackground.height()) / 2);
 }
 
 void DBuilderUI::onGenerateButtonClicked()
