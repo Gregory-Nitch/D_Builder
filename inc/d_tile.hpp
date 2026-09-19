@@ -22,6 +22,7 @@
 #include <array>
 #include <filesystem>
 #include <atomic>
+#include <functional>
 
 /*
 ========================================================================================================================
@@ -333,10 +334,13 @@ std::unordered_map<uint32_t, std::string> const Connection_Bit_Mask_to_Str_Map =
 class D_Tile
 {
 public:
+    using Progress_Callback = std::function<void(std::string const &phase, size_t completed, size_t total)>;
+
     D_Tile(std::filesystem::path const &path);
     ~D_Tile();
-    static void load_tiles(std::filesystem::path const &dir_path = DEFAULT_INPUT_IMG_PATH);
-    static void generate_tiles();
+    static void load_tiles(std::filesystem::path const &dir_path = DEFAULT_INPUT_IMG_PATH,
+                           Progress_Callback const &progress_callback = {});
+    static void generate_tiles(Progress_Callback const &progress_callback = {});
     std::string const &get_name() const;
     std::string const &get_theme() const;
     uint64_t get_id() const;

@@ -245,9 +245,24 @@ D_Tile::~D_Tile()
  * @note Does not generate permutations in the global maps, if that is required call generate_tiles. Doing so will also
  * create images for the application to use.
  **********************************************************************************************************************/
-void D_Tile::load_tiles(std::filesystem::path const &dir_path)
+void D_Tile::load_tiles(std::filesystem::path const &dir_path, Progress_Callback const &progress_callback)
 {
     Logger.log(libcpp59::log_level::INFO, "Loading Tiles...");
+    size_t total_tile_count = 0;
+    for (auto &&dir_set : Loaded_Img_Dirs)
+    {
+        std::filesystem::path const sub_dir_path = std::filesystem::path(dir_path) / dir_set.first;
+        for (std::filesystem::directory_entry const &dir_entry : std::filesystem::directory_iterator{sub_dir_path})
+        {
+            if (!dir_entry.is_directory())
+                total_tile_count++;
+        }
+    }
+
+    size_t loaded_tile_count = 0;
+    if (progress_callback)
+        progress_callback("Loading tiles", loaded_tile_count, total_tile_count);
+
     for (auto &&dir_set : Loaded_Img_Dirs)
     {
         std::filesystem::path const sub_dir_path = std::filesystem::path(dir_path) / dir_set.first;
@@ -289,6 +304,9 @@ void D_Tile::load_tiles(std::filesystem::path const &dir_path)
             //! NOTE: We only load the tile image after we have ensured it is in the proper directory.
             tile->image = std::make_shared<QImage>(QString::fromStdString(tile->path.generic_string()));
             tiles.push_back(tile);
+            loaded_tile_count++;
+            if (progress_callback)
+                progress_callback("Loading tiles", loaded_tile_count, total_tile_count);
 
             if (tile->is_entrance())
                 entrance_count++;
@@ -343,13 +361,18 @@ void D_Tile::load_tiles(std::filesystem::path const &dir_path)
  *
  * @throws std::runtime_error if it encoutners a nullptr in the Tile_Map.
  **********************************************************************************************************************/
-void D_Tile::generate_tiles()
+void D_Tile::generate_tiles(Progress_Callback const &progress_callback)
 {
     Logger.log(libcpp59::log_level::INFO, "Generating Tiles...");
 
     size_t entrance_count = 0;
     size_t exit_count = 0;
     std::vector<std::shared_ptr<D_Tile>> permutations;
+    size_t processed_tile_count = 0;
+    size_t const source_tile_count = Tile_Map.size();
+
+    if (progress_callback)
+        progress_callback("Preparing tile permutations", processed_tile_count, source_tile_count);
 
     // For each tile in global check for permutables
     for (auto pair : Tile_Map)
@@ -364,6 +387,10 @@ void D_Tile::generate_tiles()
             Logger.log(libcpp59::log_level::ERR, "Found nullptr in tile global map!");
             throw std::runtime_error("Found nullptr in tile global map!");
         }
+
+        processed_tile_count++;
+        if (progress_callback)
+            progress_callback("Preparing tile permutations", processed_tile_count, source_tile_count);
     }
 
     // Generate images and load them to the global map.
@@ -374,6 +401,10 @@ void D_Tile::generate_tiles()
     err << "Tile Map size:" << Tile_Map.size() << " Permutations size:" << permutations.size() << " Entrance Map size:"
         << Entrance_Map.size() << " Entrance count:" << entrance_count << " Exit Map size:" << Exit_Map.size()
         << " Exit count:" << exit_count << " [Tile]:";
+    size_t generated_tile_count = 0;
+    if (progress_callback)
+        progress_callback("Writing generated tile images", generated_tile_count, permutations.size());
+
     for (auto tile : permutations)
     {
         //! IMPROVEMENT: vvv (generate_tile_img()) Move image gen out of the loop and use multiple threads for faster processing?
@@ -409,6 +440,9 @@ void D_Tile::generate_tiles()
         }
 
         Logger.log(libcpp59::log_level::DEBUG, std::format("Permutated Tile:{}", tile->to_string()));
+        generated_tile_count++;
+        if (progress_callback)
+            progress_callback("Writing generated tile images", generated_tile_count, permutations.size());
     }
 }
 

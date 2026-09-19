@@ -15,6 +15,8 @@
 #include <cstdlib>
 #include <filesystem>
 #include <string>
+#include <algorithm>
+#include <limits>
 
 /*
 ========================================================================================================================
@@ -23,6 +25,9 @@
 */
 
 #include <QApplication>
+#include <QCoreApplication>
+#include <QEventLoop>
+#include <QProgressDialog>
 
 /*
 ========================================================================================================================
@@ -63,17 +68,38 @@ int main(int argc, char **argv)
     QApplication app(argc, argv);
 
     init_img_dirs();
+    QProgressDialog tile_progress;
+    tile_progress.setWindowTitle("D_Builder");
+    tile_progress.setCancelButton(nullptr);
+    tile_progress.setWindowModality(Qt::ApplicationModal);
+    tile_progress.setMinimumDuration(0);
+    tile_progress.setAutoClose(false);
+    tile_progress.setAutoReset(false);
+
+    auto update_tile_progress = [&tile_progress](std::string const &phase, size_t completed, size_t total)
+    {
+        size_t const maximum_value = static_cast<size_t>(std::numeric_limits<int>::max());
+        int const maximum = static_cast<int>(std::min(total, maximum_value));
+        int const value = static_cast<int>(std::min(completed, maximum_value));
+        tile_progress.setLabelText(QString::fromStdString(phase) + " (" + QString::number(completed) + " of " +
+                                   QString::number(total) + ")");
+        tile_progress.setRange(0, std::max(1, maximum));
+        tile_progress.setValue(std::min(value, std::max(1, maximum)));
+        tile_progress.show();
+        QCoreApplication::processEvents(QEventLoop::AllEvents);
+    };
 
     if (2 == argc && !Gen_Flag.compare(argv[1]))
     {
-        D_Tile::load_tiles();
-        D_Tile::generate_tiles();
+        D_Tile::load_tiles(DEFAULT_INPUT_IMG_PATH, update_tile_progress);
+        D_Tile::generate_tiles(update_tile_progress);
     }
     else // Only loading required.
     {
         Logger.log(libcpp59::log_level::INFO, "Skipping tile generation.");
-        D_Tile::load_tiles(DEFAULT_IMG_LOADED_ROOT_PATH);
+        D_Tile::load_tiles(DEFAULT_IMG_LOADED_ROOT_PATH, update_tile_progress);
     }
+    tile_progress.close();
 
     Dungeon_Map = std::make_unique<D_Map>(3, 3, 50, Tile_Map);
     DBuilderUI gui;
