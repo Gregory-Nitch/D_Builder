@@ -35,6 +35,8 @@
 ========================================================================================================================
 */
 
+#include "d_builder_common.hpp"
+
 namespace Ui
 {
     class MainWindow;
@@ -57,7 +59,11 @@ public:
 protected:
     bool eventFilter(QObject *watched, QEvent *event) override;
 
+private:
+    bool needs_graphics_view_reset = false;
+
 private slots:
+
     void onGenerateButtonClicked();
     void onSaveButtonClicked();
     void onLoadTileSetButtonClicked();

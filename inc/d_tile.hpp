@@ -355,6 +355,8 @@ public:
     std::string const to_string() const;
     std::string const connections_to_string() const;
 
+    static std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> filter_by_theme(std::string const &theme);
+
 private:
     std::shared_ptr<QImage> image = nullptr;
     std::filesystem::path path;

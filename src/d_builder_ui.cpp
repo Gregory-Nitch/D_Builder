@@ -11,6 +11,8 @@
 ========================================================================================================================
 */
 
+#include <algorithm>
+
 /*
 ========================================================================================================================
 - - Local Includes - -
@@ -18,15 +20,36 @@
 */
 
 #include "d_builder_ui.hpp"
+#include "d_map.hpp"
+#include "d_tile.hpp"
 #include "ui_D_Builder.h" // Generated header for the D_Builder UI
+
+/*
+========================================================================================================================
+- - 3rd Party Includes - -
+========================================================================================================================
+*/
 
 #include <QFrame>
 #include <QTimer>
+#include <QMessageBox>
+#include <QStringList>
 
 DBuilderUI::DBuilderUI(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow), graphicsViewScene(new QGraphicsScene(this)),
                                           backgroundItem(nullptr), backgroundImage("imgs/GUI_background/Anara.png")
 {
     ui->setupUi(this);
+    QStringList themes;
+    themes.reserve(static_cast<qsizetype>(Loaded_Img_Dirs.size()));
+
+    for (const auto &[themeName, loadedDirectory] : Loaded_Img_Dirs)
+    {
+        themes.append(QString::fromStdString(themeName));
+    }
+
+    themes.sort(Qt::CaseInsensitive);
+    ui->StyleComboBox->addItems(themes);
+
     connect(ui->GenerateButton, &QPushButton::clicked, this, &DBuilderUI::onGenerateButtonClicked);
     connect(ui->SaveButton, &QPushButton::clicked, this, &DBuilderUI::onSaveButtonClicked);
     connect(ui->LoadTileSetButton, &QPushButton::clicked, this, &DBuilderUI::onLoadTileSetButtonClicked);
@@ -74,34 +97,60 @@ void DBuilderUI::updateBackgroundImage()
 
 void DBuilderUI::onGenerateButtonClicked()
 {
-    // TODO: Implementation for the generate button click event
+    needs_graphics_view_reset = false;
+    //! TODO: Remove overlay from graphics view
+
+    Active_Theme_Map = D_Tile::filter_by_theme(ui->StyleComboBox->currentText().toStdString());
+    //! ERROR: there is an error here, the active theme is coming up empty!!!
+    Dungeon_Map->generate(ui->ColumnsSpinner->value(),
+                          ui->RowsSpinner->value(),
+                          ui->PercentConnectionsSpinner->value(),
+                          Active_Theme_Map);
+
+    //! TODO: Implementation for updating the graphics view after generation
 }
 void DBuilderUI::onSaveButtonClicked()
 {
-    // TODO: Implementation for the save button click event
+    if (needs_graphics_view_reset)
+    {
+        Logger.log(libcpp59::log_level::INFO, "Graphics view needs to be reset before saving.");
+        QMessageBox::information(this, "Info", "Graphics view needs to be reset before saving.");
+        return;
+    }
+
+    //! TODO: Implementation for the save button click event
 }
 
 void DBuilderUI::onLoadTileSetButtonClicked()
 {
-    // TODO: Implementation for the load tile set button click event
+    needs_graphics_view_reset = true;
+    //! TODO: Implementation for the load tile set button click event
 }
 
 void DBuilderUI::onPercentConnectionChanged()
 {
-    // TODO: Implementation for the percent connection value change event
+    needs_graphics_view_reset = true;
+
+    //! TODO: Implementation for the percent connection value change event
 }
 
 void DBuilderUI::onNumRowsCChanged()
 {
-    // TODO: Implementation for the number of rows value change event
+    needs_graphics_view_reset = true;
+
+    //! TODO: Implementation for the number of rows value change event
 }
 
 void DBuilderUI::onNumColsChanged()
 {
-    // TODO: Implementation for the number of columns value change event
+    needs_graphics_view_reset = true;
+
+    //! TODO: Implementation for the number of columns value change event
 }
 
 void DBuilderUI::onStyleChanged()
 {
-    // TODO: Implementation for the style change event
+    needs_graphics_view_reset = true;
+
+    //! TODO: Implementation for the style change event
 }

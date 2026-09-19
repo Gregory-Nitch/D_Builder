@@ -52,67 +52,67 @@
 /***********************************************************************************************************************
  * @brief Max possible permutations of a tile that is not flippable.
  **********************************************************************************************************************/
-#define MAX_PERMUTATIONS (3)
+constexpr uint8_t MAX_PERMUTATIONS = 3;
 
 /***********************************************************************************************************************
  * @brief Max possible permutations of a tile that is flippable.
  **********************************************************************************************************************/
-#define MAX_FLIPPABLE_PERMUTATIONS (7)
+constexpr uint8_t MAX_FLIPPABLE_PERMUTATIONS = 7;
 
 /***********************************************************************************************************************
  * @brief Max possible number of connections a tile can have.
  **********************************************************************************************************************/
-#define TILE_CONNECTION_MAX (32)
+constexpr uint8_t TILE_CONNECTION_MAX = 32;
 
 /***********************************************************************************************************************
  * @brief Max possible tokens a tile filename should have.
  **********************************************************************************************************************/
-#define FILE_NAME_TOKEN_NUM (7)
+constexpr uint8_t FILE_NAME_TOKEN_NUM = 7;
 
 /***********************************************************************************************************************
  * @brief Index of the tile name in the token vector when constructing a tile.
  **********************************************************************************************************************/
-#define TILE_NAME_IDX (0)
+constexpr uint8_t TILE_NAME_IDX = 0;
 
 /***********************************************************************************************************************
  * @brief Index of the tile theme in the token vector when constructing a tile.
  **********************************************************************************************************************/
-#define TILE_THEME_IDX (1)
+constexpr uint8_t TILE_THEME_IDX = 1;
 
 /***********************************************************************************************************************
  * @brief Index of the tile connections in the token vector when constructing a tile.
  **********************************************************************************************************************/
-#define TILE_CON_IDX (2)
+constexpr uint8_t TILE_CON_IDX = 2;
 
 /***********************************************************************************************************************
  * @brief Index of the tile's entrance flag in the token vector when constructing a tile.
  **********************************************************************************************************************/
-#define TILE_ENT_FLG_IDX (3)
+constexpr uint8_t TILE_ENT_FLG_IDX = 3;
 
 /***********************************************************************************************************************
  * @brief Index of the tile's exit flag in the token vector when constructing a tile.
  **********************************************************************************************************************/
-#define TILE_EXT_FLG_IDX (4)
+constexpr uint8_t TILE_EXT_FLG_IDX = 4;
 
 /***********************************************************************************************************************
  * @brief Index of the tile's permutable flag in the token vector when constructing a tile.
  **********************************************************************************************************************/
-#define TILE_PERM_FLG_IDX (5)
+constexpr uint8_t TILE_PERM_FLG_IDX = 5;
 
 /***********************************************************************************************************************
  * @brief Index of the tile's flippable flag in the token vector when constructing a tile.
  **********************************************************************************************************************/
-#define TILE_FLIP_FLG_IDX (6)
+constexpr uint8_t TILE_FLIP_FLG_IDX = 6;
 
 /***********************************************************************************************************************
  * @brief Expected string when parsing a tile that has no connections.
  **********************************************************************************************************************/
-#define NA_CONNECTION_TOKEN "NA"
+constexpr char const *NA_CONNECTION_TOKEN = "NA";
 
 /***********************************************************************************************************************
  * @brief Number of connections that every tile will have on one side, used when rotating connections.
  **********************************************************************************************************************/
-#define TILE_SIDE_CONNECTION_SIZE (8)
+constexpr uint8_t TILE_SIDE_CONNECTION_SIZE = 8;
 
 /***********************************************************************************************************************
  * @brief Global id counter for D_Tile objects.
@@ -969,4 +969,29 @@ inline D_Connections D_Tile::flip_connections(D_Connections to_flip)
     out.side_masks.right = reverse_8bits(to_flip.side_masks.left);
 
     return out;
+}
+
+/***********************************************************************************************************************
+ * @brief Filters loaded tiles by theme.
+ *
+ * @param[in] theme The theme to filter by.
+ *
+ * @retval std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Map of tile IDs to tile shared pointers that match the
+ * theme.
+ **********************************************************************************************************************/
+std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> D_Tile::filter_by_theme(std::string const &theme)
+{
+    std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> filtered_tiles;
+    std::size_t reserve_size = 0;
+
+    for (auto const &pair : Tile_Map)
+        if (pair.second->get_theme() == theme)
+            ++reserve_size;
+
+    filtered_tiles.reserve(reserve_size);
+    for (auto const &pair : Tile_Map)
+        if (pair.second->get_theme() == theme)
+            filtered_tiles.emplace(pair.first, pair.second);
+
+    return filtered_tiles;
 }

@@ -21,6 +21,7 @@
 #include <string>
 #include <format>
 #include <iostream>
+#include <filesystem>
 
 /*
 ========================================================================================================================
@@ -104,6 +105,11 @@ extern std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Entrance_Map;
  * shared with the Tile_Map global variable.
  **********************************************************************************************************************/
 extern std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Exit_Map;
+
+/***********************************************************************************************************************
+ * @brief Global map of all D_Tiles filtered by the currently active theme, normally initialized at application start.
+ **********************************************************************************************************************/
+extern std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Active_Theme_Map;
 
 /***********************************************************************************************************************
  * @brief Global empty tile shared pointer.

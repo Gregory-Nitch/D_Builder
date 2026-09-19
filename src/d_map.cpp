@@ -131,7 +131,7 @@ void D_Map::generate()
 void D_Map::generate(uint8_t in_cols,
                      uint8_t in_rows,
                      uint8_t in_con_chance,
-                     std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> &usable_tiles = Tile_Map)
+                     std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> &usable_tiles)
 {
     if (in_cols > MAX_MAP_SIZE ||
         in_rows > MAX_MAP_SIZE ||

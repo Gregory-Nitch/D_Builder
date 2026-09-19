@@ -50,6 +50,7 @@
 std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Tile_Map = {};
 std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Entrance_Map = {};
 std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Exit_Map = {};
+std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Active_Theme_Map = {};
 std::unordered_map<std::string, std::filesystem::path> Loaded_Img_Dirs = {};
 std::shared_ptr<D_Tile> Empty_Tile = nullptr;
 std::unique_ptr<D_Map> Dungeon_Map = nullptr;
@@ -102,7 +103,16 @@ int main(int argc, char **argv)
         D_Tile::load_tiles(DEFAULT_IMG_LOADED_ROOT_PATH, update_tile_progress);
     }
 
-    Dungeon_Map = std::make_unique<D_Map>(3, 3, 50, Tile_Map);
+    if (Tile_Map.empty())
+    {
+        Logger.log(libcpp59::log_level::ERR, "No tiles loaded when filtering by theme! Exiting...");
+        return EXIT_FAILURE;
+    }
+    // We are just grabing the first theme available as the default
+    std::string default_theme = Tile_Map.begin()->second->get_theme();
+    Active_Theme_Map = D_Tile::filter_by_theme(default_theme);
+    Dungeon_Map = std::make_unique<D_Map>(3, 3, 50, Active_Theme_Map);
+
     DBuilderUI gui;
     gui.show();
     tile_progress.close();
