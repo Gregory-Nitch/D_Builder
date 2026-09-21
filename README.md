@@ -3,7 +3,7 @@ Desktop TTRPG dungeon builder
 
 # Building
 - `mkdir bld && cd bld`
-- `cmake -S .. -B . -DCMAKE_BUILD_TYPE=<debug/release> -DCMAKE_PREFIX_PATH="$HOME/Repos/Qt/6.11.1/gcc_64;/usr/local"`
+- `cmake -S .. -B . -DCMAKE_BUILD_TYPE=<debug/release> -DCMAKE_PREFIX_PATH="$HOME/SW/Repos/Qt/6.11.2/gcc_64;/usr/local"`
 - `cmake --build .`
 
 ## Testing
@@ -23,7 +23,7 @@ Desktop TTRPG dungeon builder
 *expected in user/local/ in the above build config but can be changed*
 
 ## 3rd Party Libs
-- Qt 6.11.1
+- Qt 6.11.2
   - *install directory can be altered in the above config*
 - OpenGL (For Qt)
   - Ubuntu : `sudo apt install libgl1-mesa-dev libglu1-mesa-dev freeglut3-dev mesa-common-dev`
