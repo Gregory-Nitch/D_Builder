@@ -100,8 +100,7 @@ void DBuilderUI::onGenerateButtonClicked()
     needs_graphics_view_reset = false;
     //! TODO: Remove overlay from graphics view
 
-    Active_Theme_Map = D_Tile::filter_by_theme(ui->StyleComboBox->currentText().toStdString());
-    //! ERROR: there is an error here, the active theme is coming up empty!!!
+    Active_Theme_Map = D_Tile::filter_by_theme(ui->StyleComboBox->currentText().toLower().toStdString());
     Dungeon_Map->generate(ui->ColumnsSpinner->value(),
                           ui->RowsSpinner->value(),
                           ui->PercentConnectionsSpinner->value(),
