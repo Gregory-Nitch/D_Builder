@@ -19,6 +19,7 @@ D_TileGraphicsItem::D_TileGraphicsItem(std::shared_ptr<D_Tile> const &tile, std:
       col(col),
       clickHandler(clickHandler)
 {
+    setAcceptHoverEvents(true);
 }
 
 void D_TileGraphicsItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -27,4 +28,34 @@ void D_TileGraphicsItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
         clickHandler(row, col, event->button());
 
     QGraphicsPixmapItem::mousePressEvent(event);
+}
+
+void D_TileGraphicsItem::paint(QPainter *painter,
+                               const QStyleOptionGraphicsItem *option,
+                               QWidget *widget)
+{
+    QGraphicsPixmapItem::paint(painter, option, widget);
+
+    if (!is_hovered)
+        return;
+
+    QPen outlinePen(Qt::red);
+    outlinePen.setWidth(3);
+    painter->setPen(outlinePen);
+    painter->setBrush(Qt::NoBrush);
+    painter->drawRect(boundingRect().adjusted(1.5, 1.5, -1.5, -1.5));
+}
+
+void D_TileGraphicsItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
+{
+    is_hovered = true;
+    update();
+    QGraphicsPixmapItem::hoverEnterEvent(event);
+}
+
+void D_TileGraphicsItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
+{
+    is_hovered = false;
+    update();
+    QGraphicsPixmapItem::hoverLeaveEvent(event);
 }

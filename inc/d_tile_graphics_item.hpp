@@ -29,6 +29,8 @@
 
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsPixmapItem>
+#include <QGraphicsSceneHoverEvent>
+#include <QPainter>
 
 class D_TileGraphicsItem : public QGraphicsPixmapItem
 {
@@ -40,4 +42,12 @@ public:
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+    void paint(QPainter *painter,
+               const QStyleOptionGraphicsItem *option,
+               QWidget *widget = nullptr) override;
+    void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
+
+private:
+    bool is_hovered = false;
 };
