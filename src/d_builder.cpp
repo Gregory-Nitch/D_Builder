@@ -112,7 +112,8 @@ int main(int argc, char **argv)
     std::string default_theme = Tile_Map.begin()->second->get_theme();
     Active_Theme_Map = D_Tile::filter_by_theme(default_theme);
     Logger.log(libcpp59::log_level::INFO, "Default theme: " + default_theme);
-    Dungeon_Map = std::make_unique<D_Map>(3, 3, 50, Active_Theme_Map);
+    //! NOTE: the .ui file has these 3x3 and 80% settings set for default values.
+    Dungeon_Map = std::make_unique<D_Map>(20, 20, 80, Active_Theme_Map);
 
     DBuilderUI gui;
     gui.show();

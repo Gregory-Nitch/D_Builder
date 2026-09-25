@@ -13,6 +13,9 @@
 ========================================================================================================================
 */
 
+#include <vector>
+#include <memory>
+
 /*
 ========================================================================================================================
 - - 3rd Party Includes - -
@@ -28,6 +31,7 @@
 #include <QPixmap>
 #include <QObject>
 #include <QEvent>
+#include <QtGlobal>
 
 /*
 ========================================================================================================================
@@ -36,6 +40,7 @@
 */
 
 #include "d_builder_common.hpp"
+#include "d_tile_graphics_item.hpp"
 
 namespace Ui
 {
@@ -49,21 +54,18 @@ class DBuilderUI : public QMainWindow
 public:
     explicit DBuilderUI(QWidget *parent = nullptr);
     ~DBuilderUI();
-    void updateBackgroundImage();
 
     Ui::MainWindow *ui;
     QGraphicsScene *graphicsViewScene;
-    QGraphicsPixmapItem *backgroundItem;
-    QPixmap backgroundImage;
-
-protected:
-    bool eventFilter(QObject *watched, QEvent *event) override;
+    std::vector<std::vector<D_TileGraphicsItem *>> tile_graphics_mat;
 
 private:
-    bool needs_graphics_view_reset = false;
+    bool requires_map_generation = false;
+    qreal maxZoomMultiplier = 8.0;
+    qreal minZoom = 0.1;
+    void resetGraphicsView();
 
 private slots:
-
     void onGenerateButtonClicked();
     void onSaveButtonClicked();
     void onLoadTileSetButtonClicked();

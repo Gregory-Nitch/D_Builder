@@ -12,6 +12,7 @@
 */
 
 #include <algorithm>
+#include <format>
 
 /*
 ========================================================================================================================
@@ -35,8 +36,9 @@
 #include <QMessageBox>
 #include <QStringList>
 
-DBuilderUI::DBuilderUI(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow), graphicsViewScene(new QGraphicsScene(this)),
-                                          backgroundItem(nullptr), backgroundImage("imgs/GUI_background/Anara.png")
+DBuilderUI::DBuilderUI(QWidget *parent) : QMainWindow(parent),
+                                          ui(new Ui::MainWindow),
+                                          graphicsViewScene(new QGraphicsScene(this))
 {
     ui->setupUi(this);
     QStringList themes;
@@ -58,13 +60,34 @@ DBuilderUI::DBuilderUI(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->ColumnsSpinner, &QSpinBox::valueChanged, this, &DBuilderUI::onNumColsChanged);
     connect(ui->StyleComboBox, &QComboBox::currentTextChanged, this, &DBuilderUI::onStyleChanged);
 
-    backgroundItem = graphicsViewScene->addPixmap(backgroundImage);
+    const auto &displayMat = Dungeon_Map->get_display_mat();
+    tile_graphics_mat.resize(displayMat.size());
+    for (std::size_t col = 0; col < displayMat.size(); ++col)
+        tile_graphics_mat[col].resize(displayMat[col].size());
+
+    for (std::size_t col = 0; col < displayMat.size(); ++col)
+    {
+        for (std::size_t row = 0; row < displayMat[col].size(); ++row)
+        {
+            const auto &tile = displayMat[col][row];
+            if (tile)
+            {
+                auto *tileItem = new D_TileGraphicsItem(tile, row, col, nullptr);
+                tile_graphics_mat[col][row] = tileItem;
+                tileItem->setPos(col * tile->get_image()->width(), row * tile->get_image()->height());
+                graphicsViewScene->addItem(tileItem);
+            }
+        }
+    }
+
     ui->graphicsView->setScene(graphicsViewScene);
     ui->graphicsView->setFrameShape(QFrame::NoFrame);
     ui->graphicsView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     ui->graphicsView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    ui->graphicsView->viewport()->installEventFilter(this);
-    QTimer::singleShot(0, this, &DBuilderUI::updateBackgroundImage);
+    ui->graphicsView->setDragMode(QGraphicsView::ScrollHandDrag);
+
+    QTimer::singleShot(0, this, [this]
+                       { resetGraphicsView(); });
 }
 
 DBuilderUI::~DBuilderUI()
@@ -72,32 +95,20 @@ DBuilderUI::~DBuilderUI()
     delete ui;
 }
 
-bool DBuilderUI::eventFilter(QObject *watched, QEvent *event)
+void DBuilderUI::resetGraphicsView()
 {
-    if (watched == ui->graphicsView->viewport() && event->type() == QEvent::Resize)
-    {
-        updateBackgroundImage();
-    }
-    return QMainWindow::eventFilter(watched, event);
-}
-
-void DBuilderUI::updateBackgroundImage()
-{
-    const QSize viewSize = ui->graphicsView->viewport()->size();
-    if (viewSize.isEmpty())
-        return;
-
-    const QPixmap scaledBackground = backgroundImage.scaled(viewSize, Qt::KeepAspectRatioByExpanding,
-                                                            Qt::SmoothTransformation);
-    graphicsViewScene->setSceneRect(0, 0, viewSize.width(), viewSize.height());
-    backgroundItem->setPixmap(scaledBackground);
-    backgroundItem->setPos((viewSize.width() - scaledBackground.width()) / 2,
-                           (viewSize.height() - scaledBackground.height()) / 2);
+    const QRectF mapBounds = graphicsViewScene->itemsBoundingRect();
+    graphicsViewScene->setSceneRect(mapBounds);
+    ui->graphicsView->resetTransform();
+    ui->graphicsView->fitInView(mapBounds, Qt::KeepAspectRatio);
+    ui->graphicsView->centerOn(mapBounds.center());
+    minZoom = ui->graphicsView->transform().m11();
+    ui->graphicsView->setZoomLimits(minZoom, minZoom * maxZoomMultiplier);
 }
 
 void DBuilderUI::onGenerateButtonClicked()
 {
-    needs_graphics_view_reset = false;
+    requires_map_generation = false;
     //! TODO: Remove overlay from graphics view
 
     Active_Theme_Map = D_Tile::filter_by_theme(ui->StyleComboBox->currentText().toLower().toStdString());
@@ -106,11 +117,35 @@ void DBuilderUI::onGenerateButtonClicked()
                           ui->PercentConnectionsSpinner->value(),
                           Active_Theme_Map);
 
-    //! TODO: Implementation for updating the graphics view after generation
+    // Clear our view state for before updating the graphics view
+    graphicsViewScene->clear();
+    tile_graphics_mat.clear();
+
+    const auto &displayMat = Dungeon_Map->get_display_mat();
+    tile_graphics_mat.resize(displayMat.size());
+    for (std::size_t col = 0; col < displayMat.size(); ++col)
+        tile_graphics_mat[col].resize(displayMat[col].size());
+
+    for (std::size_t col = 0; col < displayMat.size(); ++col)
+    {
+        for (std::size_t row = 0; row < displayMat[col].size(); ++row)
+        {
+            const auto &tile = displayMat[col][row];
+            if (tile)
+            {
+                auto *tileItem = new D_TileGraphicsItem(tile, row, col, nullptr);
+                tile_graphics_mat[col][row] = tileItem;
+                tileItem->setPos(col * tile->get_image()->width(), row * tile->get_image()->height());
+                graphicsViewScene->addItem(tileItem);
+            }
+        }
+    }
+
+    resetGraphicsView();
 }
 void DBuilderUI::onSaveButtonClicked()
 {
-    if (needs_graphics_view_reset)
+    if (requires_map_generation)
     {
         Logger.log(libcpp59::log_level::INFO, "Graphics view needs to be reset before saving.");
         QMessageBox::information(this, "Info", "Graphics view needs to be reset before saving.");
@@ -122,34 +157,34 @@ void DBuilderUI::onSaveButtonClicked()
 
 void DBuilderUI::onLoadTileSetButtonClicked()
 {
-    needs_graphics_view_reset = true;
+    requires_map_generation = true;
     //! TODO: Implementation for the load tile set button click event
 }
 
 void DBuilderUI::onPercentConnectionChanged()
 {
-    needs_graphics_view_reset = true;
+    requires_map_generation = true;
 
     //! TODO: Implementation for the percent connection value change event
 }
 
 void DBuilderUI::onNumRowsCChanged()
 {
-    needs_graphics_view_reset = true;
+    requires_map_generation = true;
 
     //! TODO: Implementation for the number of rows value change event
 }
 
 void DBuilderUI::onNumColsChanged()
 {
-    needs_graphics_view_reset = true;
+    requires_map_generation = true;
 
     //! TODO: Implementation for the number of columns value change event
 }
 
 void DBuilderUI::onStyleChanged()
 {
-    needs_graphics_view_reset = true;
+    requires_map_generation = true;
 
     //! TODO: Implementation for the style change event
 }

@@ -449,7 +449,7 @@
      </widget>
     </item>
     <item row="1" column="0" colspan="10">
-     <widget class="QGraphicsView" name="graphicsView">
+    <widget class="D_MapGraphicsView" name="graphicsView">
       <property name="autoFillBackground">
        <bool>false</bool>
       </property>
@@ -463,6 +463,13 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>D_MapGraphicsView</class>
+   <extends>QGraphicsView</extends>
+   <header location="global">d_map_graphics_view.hpp</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

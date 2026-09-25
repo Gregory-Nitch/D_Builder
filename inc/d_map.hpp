@@ -101,7 +101,7 @@ constexpr std::array<uint8_t, 4> TILE_NEIGHBOOR_SIDE_IDX_MIRRORS =
  *
  * @members:
  *      @private std::vector<std::vector<std::shared_ptr<D_Tile>>> display_mat = matrix of tiles that make up the actual
- *               map.
+ *               map. ([col][row])
  *      @private std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> theme_map = map of tiles to use during generation.
  *      @private std::deque<std::pair<uint8_t, uint8_t>> to_visit = points in the map which need to be visited and have
  *               a tile assigned to them
