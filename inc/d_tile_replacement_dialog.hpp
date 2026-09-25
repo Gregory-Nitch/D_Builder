@@ -15,6 +15,8 @@
 
 #include <memory>
 #include <unordered_map>
+#include <array>
+#include <cstdint>
 
 /*
 ========================================================================================================================
@@ -33,7 +35,9 @@
 #include "d_tile.hpp"
 
 class QComboBox;
+class QCheckBox;
 class QGridLayout;
+class QGroupBox;
 
 class TileReplacementDialog : public QDialog
 {
@@ -48,7 +52,11 @@ private:
     std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> const &active_theme_tiles;
     std::shared_ptr<D_Tile> selected_tile;
     QComboBox *connection_filter = nullptr;
+    QGroupBox *custom_mask_editor = nullptr;
+    std::array<QCheckBox *, 32> custom_mask_bits{};
     QGridLayout *tile_grid = nullptr;
 
+    uint32_t customConnectionMask() const;
+    void updateCustomMaskEditor();
     void rebuildTileGrid();
 };

@@ -29,8 +29,10 @@
 */
 
 #include <QComboBox>
+#include <QCheckBox>
 #include <QDialogButtonBox>
 #include <QGridLayout>
+#include <QGroupBox>
 #include <QIcon>
 #include <QLabel>
 #include <QPixmap>
@@ -40,6 +42,8 @@
 
 constexpr int TILE_CHOOSER_COLUMNS = 4;
 constexpr int TILE_THUMBNAIL_SIZE = 144;
+constexpr int CONNECTION_SIDES = 4;
+constexpr int CONNECTIONS_PER_SIDE = 8;
 
 TileReplacementDialog::TileReplacementDialog(
     std::shared_ptr<D_Tile> current_tile,
@@ -56,7 +60,28 @@ TileReplacementDialog::TileReplacementDialog(
     connection_filter = new QComboBox(this);
     connection_filter->addItem("Matching connections");
     connection_filter->addItem("All active-theme tiles");
+    connection_filter->addItem("Custom mask");
     layout->addWidget(connection_filter);
+
+    custom_mask_editor = new QGroupBox("Custom connection mask", this);
+    auto *custom_mask_layout = new QGridLayout(custom_mask_editor);
+    constexpr std::array<char const *, CONNECTION_SIDES> side_labels = {"Top", "Right", "Bottom", "Left"};
+    for (int side = 0; side < CONNECTION_SIDES; ++side)
+    {
+        custom_mask_layout->addWidget(new QLabel(side_labels[side], custom_mask_editor), side, 0);
+        for (int connection = 0; connection < CONNECTIONS_PER_SIDE; ++connection)
+        {
+            const int bit_index = (side * CONNECTIONS_PER_SIDE) + connection;
+            auto *bit_checkbox = new QCheckBox(QString::number(connection), custom_mask_editor);
+            custom_mask_bits.at(static_cast<std::size_t>(bit_index)) = bit_checkbox;
+            custom_mask_layout->addWidget(bit_checkbox, side, connection + 1);
+            connect(bit_checkbox, &QCheckBox::toggled, this, [this](bool)
+                    {
+                        if (connection_filter->currentIndex() == 2)
+                            rebuildTileGrid(); });
+        }
+    }
+    layout->addWidget(custom_mask_editor);
 
     auto *scroll_area = new QScrollArea(this);
     scroll_area->setWidgetResizable(true);
@@ -74,14 +99,34 @@ TileReplacementDialog::TileReplacementDialog(
             qOverload<int>(&QComboBox::currentIndexChanged),
             this,
             [this](int)
-            { rebuildTileGrid(); });
+            {
+                updateCustomMaskEditor();
+                rebuildTileGrid();
+            });
 
+    updateCustomMaskEditor();
     rebuildTileGrid();
 }
 
 std::shared_ptr<D_Tile> TileReplacementDialog::selectedTile() const
 {
     return selected_tile;
+}
+
+uint32_t TileReplacementDialog::customConnectionMask() const
+{
+    uint32_t mask = CONNECTION_ZERO_MASK;
+    for (std::size_t bit_index = 0; bit_index < custom_mask_bits.size(); ++bit_index)
+    {
+        if (custom_mask_bits.at(bit_index)->isChecked())
+            mask |= (uint32_t{1} << bit_index);
+    }
+    return mask;
+}
+
+void TileReplacementDialog::updateCustomMaskEditor()
+{
+    custom_mask_editor->setEnabled(connection_filter->currentIndex() == 2);
 }
 
 void TileReplacementDialog::rebuildTileGrid()
@@ -95,13 +140,17 @@ void TileReplacementDialog::rebuildTileGrid()
     std::vector<std::shared_ptr<D_Tile>> candidates;
     candidates.reserve(active_theme_tiles.size());
     const bool require_matching_connections = connection_filter->currentIndex() == 0;
-    const uint32_t current_connections = current_tile->get_connections().mask;
+    const bool require_custom_connections = connection_filter->currentIndex() == 2;
+    const uint32_t required_connections = require_custom_connections
+                                              ? customConnectionMask()
+                                              : current_tile->get_connections().mask;
 
     for (auto const &[id, tile] : active_theme_tiles)
     {
         if (tile == nullptr)
             continue;
-        if (require_matching_connections && tile->get_connections().mask != current_connections)
+        if ((require_matching_connections || require_custom_connections) &&
+            tile->get_connections().mask != required_connections)
             continue;
 
         candidates.push_back(tile);
@@ -115,7 +164,7 @@ void TileReplacementDialog::rebuildTileGrid()
 
     if (candidates.empty())
     {
-        auto *no_matches = new QLabel("No active-theme tiles match this filter.", this);
+        auto *no_matches = new QLabel("No active-theme tiles match this filter.", tile_grid->parentWidget());
         no_matches->setAlignment(Qt::AlignCenter);
         tile_grid->addWidget(no_matches, 0, 0);
         return;
