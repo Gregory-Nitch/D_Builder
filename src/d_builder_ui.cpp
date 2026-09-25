@@ -12,7 +12,9 @@
 */
 
 #include <algorithm>
+#include <filesystem>
 #include <format>
+#include <limits>
 
 /*
 ************************************************************************************************************************
@@ -35,7 +37,12 @@
 #include <QFrame>
 #include <QTimer>
 #include <QMessageBox>
+#include <QCheckBox>
 #include <QFileDialog>
+#include <QProgressDialog>
+#include <QCoreApplication>
+#include <QEventLoop>
+#include <QSignalBlocker>
 #include <QStringList>
 #include <QLabel>
 #include <QVBoxLayout>
@@ -243,8 +250,121 @@ void DBuilderUI::onSaveButtonClicked()
 
 void DBuilderUI::onLoadTileSetButtonClicked()
 {
+    const QString tileSetDirectory = QFileDialog::getExistingDirectory(
+        this,
+        "Select Tile Set Directory",
+        QString::fromStdString(DEFAULT_INPUT_IMG_PATH));
+    if (tileSetDirectory.isEmpty())
+        return;
+
+    QMessageBox generationPrompt(this);
+    generationPrompt.setWindowTitle("Load Tile Set");
+    generationPrompt.setText("Load the selected tile set?");
+    generationPrompt.setInformativeText("Generate tile permutations before loading the tile set.");
+    generationPrompt.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+    generationPrompt.setDefaultButton(QMessageBox::Ok);
+    auto *generateTilesCheckBox = new QCheckBox("Generate tile permutations", &generationPrompt);
+    generationPrompt.setCheckBox(generateTilesCheckBox);
+    if (generationPrompt.exec() != QMessageBox::Ok)
+        return;
+
+    const std::filesystem::path tileSetRootPath = tileSetDirectory.toStdString();
+    std::vector<std::string> themeNames;
+    try
+    {
+        for (const auto &entry : std::filesystem::directory_iterator(tileSetRootPath))
+        {
+            if (entry.is_directory())
+                themeNames.push_back(entry.path().filename().string());
+        }
+    }
+    catch (const std::filesystem::filesystem_error &error)
+    {
+        Logger.log(libcpp59::log_level::ERR, error.what());
+        QMessageBox::critical(this, "Load Tile Set", error.what());
+        return;
+    }
+
+    if (themeNames.empty())
+    {
+        const QString message = "The selected directory must contain at least one theme subdirectory.";
+        Logger.log(libcpp59::log_level::ERR, message.toStdString());
+        QMessageBox::warning(this, "Load Tile Set", message);
+        return;
+    }
+
     setMapGenerationRequired(true);
-    //! TODO: Implementation for the load tile set button click event
+    Tile_Map.clear();
+    Entrance_Map.clear();
+    Exit_Map.clear();
+    Active_Theme_Map.clear();
+    Empty_Tile.reset();
+    Loaded_Img_Dirs.clear();
+    Loaded_Img_Dirs.reserve(themeNames.size());
+
+    for (const std::string &themeName : themeNames)
+    {
+        const std::filesystem::path loadedThemePath =
+            std::filesystem::path(DEFAULT_IMG_LOADED_ROOT_PATH) / themeName;
+        std::filesystem::create_directories(loadedThemePath);
+        Loaded_Img_Dirs.emplace(themeName, loadedThemePath);
+    }
+
+    QProgressDialog tileProgress("", QString(), 0, 1, this);
+    tileProgress.setWindowTitle("D_Builder");
+    tileProgress.setCancelButton(nullptr);
+    tileProgress.setWindowModality(Qt::ApplicationModal);
+    tileProgress.setMinimumDuration(0);
+    tileProgress.setAutoClose(false);
+    tileProgress.setAutoReset(false);
+    const auto updateTileProgress = [&tileProgress](std::string const &phase, size_t completed, size_t total)
+    {
+        const size_t maximumValue = static_cast<size_t>(std::numeric_limits<int>::max());
+        const int maximum = static_cast<int>(std::min(total, maximumValue));
+        const int value = static_cast<int>(std::min(completed, maximumValue));
+        tileProgress.setLabelText(QString::fromStdString(phase) + " (" + QString::number(completed) + " of " +
+                                  QString::number(total) + ")");
+        tileProgress.setRange(0, std::max(1, maximum));
+        tileProgress.setValue(std::min(value, std::max(1, maximum)));
+        tileProgress.show();
+        QCoreApplication::processEvents(QEventLoop::AllEvents);
+    };
+
+    try
+    {
+        D_Tile::load_tiles(tileSetRootPath, updateTileProgress);
+        if (generateTilesCheckBox->isChecked())
+            D_Tile::generate_tiles(updateTileProgress);
+    }
+    catch (const std::exception &error)
+    {
+        tileProgress.close();
+        Logger.log(libcpp59::log_level::ERR, error.what());
+        QMessageBox::critical(this, "Load Tile Set", error.what());
+        return;
+    }
+    tileProgress.close();
+
+    if (Tile_Map.empty())
+    {
+        const QString message = "No tiles were loaded from the selected directory.";
+        Logger.log(libcpp59::log_level::ERR, message.toStdString());
+        QMessageBox::warning(this, "Load Tile Set", message);
+        return;
+    }
+
+    const std::string defaultTheme = Tile_Map.begin()->second->get_theme();
+    Active_Theme_Map = D_Tile::filter_by_theme(defaultTheme);
+    QStringList themes;
+    themes.reserve(static_cast<qsizetype>(Loaded_Img_Dirs.size()));
+    for (const auto &[themeName, loadedDirectory] : Loaded_Img_Dirs)
+        themes.append(QString::fromStdString(themeName));
+    themes.sort(Qt::CaseInsensitive);
+
+    const QSignalBlocker styleComboBoxSignalBlocker(ui->StyleComboBox);
+    ui->StyleComboBox->clear();
+    ui->StyleComboBox->addItems(themes);
+    ui->StyleComboBox->setCurrentText(QString::fromStdString(defaultTheme));
 }
 
 void DBuilderUI::onPercentConnectionChanged()

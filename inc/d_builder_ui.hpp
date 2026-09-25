@@ -125,7 +125,7 @@ private slots:
     void onSaveButtonClicked();
 
     /***********************************************************************************************************************
-     * @brief Marks the current map as stale after a tile-set load request.
+     * @brief Loads a tile set from a selected root directory and marks the current map as stale.
      **********************************************************************************************************************/
     void onLoadTileSetButtonClicked();
 
