@@ -1,7 +1,7 @@
 # D_Builder
 A desktop TTRPG dungeon builder that allows map section swaping after map generation. Custom tile sets are permited given they fit the tile requirements (see below). The following is an image of the UI with a 3x3 map of the first basic tile set.
 ![UI Example](ui_example.png)
-The map can be dragged, zoomed in and out, and tiles can be swapped by right click along with changing map settings with the top buttons etc. Note that after changing some settings the map will need to be regenerated to reset the state.
+The map can be dragged, zoomed in and out, and tiles can be swapped by right click along with changing map settings with the top buttons etc. Note that after changing some settings the map will need to be regenerated to reset the state. The percent connections setting will change the likely hood of the map extending into other columns and rows durring generation.
 
 ## Planned Features
 - New themes such as:
@@ -25,6 +25,7 @@ The map can be dragged, zoomed in and out, and tiles can be swapped by right cli
 - Vulkan (For Qt)
   - Ubuntu : `sudo apt install libvulkan-dev`
 - Doxygen (optional)
+- git lfs is used for image management in the repo.
 
 ### A Note on Large Qt Images
 - Max allocation has been set to 1024 but if you need an overide you could execute with:
