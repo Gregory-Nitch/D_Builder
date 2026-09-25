@@ -72,7 +72,11 @@ DBuilderUI::DBuilderUI(QWidget *parent) : QMainWindow(parent),
             const auto &tile = displayMat[col][row];
             if (tile)
             {
-                auto *tileItem = new D_TileGraphicsItem(tile, row, col, nullptr);
+                clickHandler = [this](std::size_t row, std::size_t col, Qt::MouseButton button)
+                {
+                    on_tile_right_clicked(row, col, button);
+                };
+                auto *tileItem = new D_TileGraphicsItem(tile, row, col, clickHandler, nullptr);
                 tile_graphics_mat[col][row] = tileItem;
                 tileItem->setPos(col * tile->get_image()->width(), row * tile->get_image()->height());
                 graphicsViewScene->addItem(tileItem);
@@ -142,7 +146,7 @@ void DBuilderUI::onGenerateButtonClicked()
             const auto &tile = displayMat[col][row];
             if (tile)
             {
-                auto *tileItem = new D_TileGraphicsItem(tile, row, col, nullptr);
+                auto *tileItem = new D_TileGraphicsItem(tile, row, col, clickHandler, nullptr);
                 tile_graphics_mat[col][row] = tileItem;
                 tileItem->setPos(col * tile->get_image()->width(), row * tile->get_image()->height());
                 graphicsViewScene->addItem(tileItem);

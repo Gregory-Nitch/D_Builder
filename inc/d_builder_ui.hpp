@@ -60,6 +60,7 @@ public:
     std::vector<std::vector<D_TileGraphicsItem *>> tile_graphics_mat;
 
 private:
+    std::function<void(std::size_t row, std::size_t col, Qt::MouseButton)> clickHandler;
     bool requires_map_generation = false;
     qreal maxZoomMultiplier = 8.0;
     qreal minZoom = 0.1;

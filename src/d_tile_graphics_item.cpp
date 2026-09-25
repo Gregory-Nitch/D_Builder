@@ -20,3 +20,11 @@ D_TileGraphicsItem::D_TileGraphicsItem(std::shared_ptr<D_Tile> const &tile, std:
       clickHandler(clickHandler)
 {
 }
+
+void D_TileGraphicsItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    if (clickHandler)
+        clickHandler(row, col, event->button());
+
+    QGraphicsPixmapItem::mousePressEvent(event);
+}

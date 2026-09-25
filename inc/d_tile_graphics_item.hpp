@@ -27,6 +27,7 @@
 ========================================================================================================================
 */
 
+#include <QGraphicsSceneMouseEvent>
 #include <QGraphicsPixmapItem>
 
 class D_TileGraphicsItem : public QGraphicsPixmapItem
@@ -36,4 +37,7 @@ public:
     std::size_t row;
     std::size_t col;
     std::function<void(std::size_t row, std::size_t col, Qt::MouseButton)> clickHandler;
+
+protected:
+    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
 };
