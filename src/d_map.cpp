@@ -6,9 +6,9 @@
  **********************************************************************************************************************/
 
 /*
-========================================================================================================================
+************************************************************************************************************************
 - - System Includes - -
-========================================================================================================================
+************************************************************************************************************************
 */
 
 #include <cstdint>
@@ -22,9 +22,9 @@
 #include <algorithm>
 
 /*
-========================================================================================================================
+************************************************************************************************************************
 - - 3rd Party Includes - -
-========================================================================================================================
+************************************************************************************************************************
 */
 
 #include <QImage>
@@ -32,18 +32,18 @@
 #include <QString>
 
 /*
-========================================================================================================================
+************************************************************************************************************************
 - - Local Includes - -
-========================================================================================================================
+************************************************************************************************************************
 */
 
 #include "d_map.hpp"
 #include "d_builder_common.hpp"
 
 /*
-========================================================================================================================
-- - Macros - -
-========================================================================================================================
+************************************************************************************************************************
+- - Constants / Macros - -
+************************************************************************************************************************
 */
 
 /***********************************************************************************************************************
@@ -56,20 +56,6 @@ constexpr uint8_t MAX_MAP_SIZE = (20);
  **********************************************************************************************************************/
 constexpr uint8_t MIN_MAP_SIZE = (2);
 
-/*
-========================================================================================================================
-- - Class Methods - -
-========================================================================================================================
-*/
-
-/***********************************************************************************************************************
- * @brief Constructor for D_Map, creates the D_Map object and calls the generate function to create a design.
- *
- * @param[in] in_cols The width of the map.
- * @param[in] in_rows The height of the map.
- * @param[in] in_con_chance Percentage chance for tiles to connect to each other during generation.
- * @param[in] usable_tiles Map of tiles to use during generation, defaults to the default map of tiles.
- **********************************************************************************************************************/
 D_Map::D_Map(uint8_t in_cols,
              uint8_t in_rows,
              uint8_t in_con_chance,
@@ -103,9 +89,6 @@ D_Map::~D_Map()
     //! TODO: this
 }
 
-/***********************************************************************************************************************
- * @brief Generates a new map design for the map using the currently set settings and tile map.
- **********************************************************************************************************************/
 void D_Map::generate()
 {
     Logger.log(libcpp59::log_level::INFO, "Resetting map for generation...");
@@ -120,14 +103,6 @@ void D_Map::generate()
     Logger.log(libcpp59::log_level::INFO, to_string());
 }
 
-/***********************************************************************************************************************
- * @brief Generates a new map design for the map using the passed settings and tile map.
- *
- * @param[in] in_cols New width of the map.
- * @param[in] in_rows New height of the map.
- * @param[in] in_con_chance New percentage chance of connections when generating designs.
- * @param[in] usable_tiles New map of tiles to use during generation.
- **********************************************************************************************************************/
 void D_Map::generate(uint8_t in_cols,
                      uint8_t in_rows,
                      uint8_t in_con_chance,
@@ -154,13 +129,6 @@ void D_Map::generate(uint8_t in_cols,
     generate();
 }
 
-/***********************************************************************************************************************
- * @brief Saves the current map design as an image to the given file name (and path).
- *
- * @param[in] file_name File name to use when saving the map.
- *
- * @retval bool Wether or not the save was succesful.
- **********************************************************************************************************************/
 bool D_Map::save(std::string file_name) const
 {
     size_t out_height = 0;
@@ -197,22 +165,11 @@ bool D_Map::save(std::string file_name) const
     return result.save(QString::fromStdString(file_name), "JPG", DEFAULT_OUTPUT_QUALITY);
 }
 
-/***********************************************************************************************************************
- * @brief Swaps the tile at the given point in the map display matrix.
- *
- * @param[in] col X coordinate in the map.
- * @param[in] row Y coordinate in the map.
- **********************************************************************************************************************/
 void D_Map::swap_tile(uint8_t col, uint8_t row, std::shared_ptr<D_Tile> replacement)
 {
     display_mat.at(col).at(row) = replacement;
 }
 
-/***********************************************************************************************************************
- * @brief Returns the D_Map with its settings and current design as a string.
- *
- * @retval std::string The map in a stringified form.
- **********************************************************************************************************************/
 std::string const D_Map::to_string() const
 {
     std::stringstream ss;
@@ -241,36 +198,16 @@ std::string const D_Map::to_string() const
     return ss.str();
 }
 
-/***********************************************************************************************************************
- * @brief Returns the display matrix of a map.
- *
- * @retval std::vector<std::vector<std::shared_ptr<D_Tile>>> A 2D vector of the map in [col][row] form.
- **********************************************************************************************************************/
 std::vector<std::vector<std::shared_ptr<D_Tile>>> const &D_Map::get_display_mat()
 {
     return display_mat;
 }
 
-/***********************************************************************************************************************
- * @brief Returns the connection chance set for the map.
- *
- * @retval uint8_t The set connection chance between tiles during generation.
- **********************************************************************************************************************/
 uint8_t D_Map::get_connection_chance() const
 {
     return connection_chance;
 }
 
-/*
-========================================================================================================================
-- - Private Functions - -
-========================================================================================================================
-*/
-
-/***********************************************************************************************************************
- * @brief Resets the data structures used to generate the map design, should be called before any other generation
- * processing.
- **********************************************************************************************************************/
 void D_Map::reset_for_generate()
 {
     display_mat.clear();
@@ -282,10 +219,6 @@ void D_Map::reset_for_generate()
     }
 }
 
-/***********************************************************************************************************************
- * @brief Starts the map generation by randomly placing an entrance in the display matrix and primes the to visit queue
- * with whatever tiles will be connected to that entrance.
- **********************************************************************************************************************/
 void D_Map::start_generation_at_entrance()
 {
     uint8_t ent_col, ent_row;
@@ -367,17 +300,6 @@ void D_Map::start_generation_at_entrance()
     }
 }
 
-/***********************************************************************************************************************
- * @brief Returns a pointer to a tile that meets the valid connection requirements set and that does not use connections
- * that are not present in the possible connection mask. If possible connections are not present a tile is selected
- * which matches its valid connections only.
- *
- * @param[in] required_connections Connections that need to be present.
- * @param[in] possible_connections Connections that may be present.
- *
- * @retval std::shared_ptr<D_Tile> A tile which meets the passed connection requirements, ie, all valid connections are
- * met and any set of possible connections may be met.
- **********************************************************************************************************************/
 std::shared_ptr<D_Tile> D_Map::chose_tile_based_on_connections(D_Connections required_connections,
                                                                D_Connections possible_connections = {.mask = CONNECTION_ZERO_MASK},
                                                                std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> const &tile_map = Tile_Map)
@@ -448,11 +370,6 @@ std::shared_ptr<D_Tile> D_Map::chose_tile_based_on_connections(D_Connections req
     return tile_canidates.at(distr(gen));
 }
 
-/***********************************************************************************************************************
- * @brief Iterates through the to visit queue and gets a tile for each visiting point in the map based on neighboors and
- * possible connections, while also placing new points in the queue. Works as the main generation loop for map
- * generation.
- **********************************************************************************************************************/
 void D_Map::place_nodes()
 {
     while (!to_visit.empty())
@@ -470,14 +387,6 @@ void D_Map::place_nodes()
     }
 }
 
-/***********************************************************************************************************************
- * @brief Gets the required and possible connections for a point while also randomly selecting directions to connect in
- * where applicable. When an empty direction has been to choosen to connect to place it in the to visit list.
- *
- * @param[in] current_point The current tile, ie the tile we are currently at.
- * @param[inout] required_connections Connection mask to fill with connections we need to connect to.
- * @param[inout] connections Connection mask to maybe match connections with.
- **********************************************************************************************************************/
 void D_Map::calculate_connections_and_add_visitors(std::pair<uint8_t, uint8_t> const &current_point,
                                                    D_Connections &required_connections,
                                                    D_Connections &possible_connections)
@@ -582,10 +491,6 @@ void D_Map::calculate_connections_and_add_visitors(std::pair<uint8_t, uint8_t> c
                                                        required_connections.mask));
 }
 
-/***********************************************************************************************************************
- * @brief Iterates through the entire display matrix, when a nullptr is found we place an empty tile there which has
- * the backgound image texture for the map and no connections.
- **********************************************************************************************************************/
 void D_Map::fill_empty_tiles()
 {
     if (!Empty_Tile)

@@ -9,9 +9,9 @@
 #pragma once
 
 /*
-========================================================================================================================
+************************************************************************************************************************
 - - System Includes - -
-========================================================================================================================
+************************************************************************************************************************
 */
 
 #include <string>
@@ -25,25 +25,25 @@
 #include <functional>
 
 /*
-========================================================================================================================
+************************************************************************************************************************
 - - 3rd Party Includes - -
-========================================================================================================================
+************************************************************************************************************************
 */
 
 #include <QImage>
 
 /*
-========================================================================================================================
+************************************************************************************************************************
 - - Local Includes - -
-========================================================================================================================
+************************************************************************************************************************
 */
 
 #include "d_builder_common.hpp"
 
 /*
-========================================================================================================================
-- - MACROS - -
-========================================================================================================================
+************************************************************************************************************************
+- - Constants / Macros - -
+************************************************************************************************************************
 */
 
 /***********************************************************************************************************************
@@ -86,9 +86,9 @@ constexpr uint8_t SIDE_FIRST_BIT_MASK = 0x01;
 constexpr uint8_t SIDE_LAST_BIT_MASK = 0x80;
 
 /*
-========================================================================================================================
+************************************************************************************************************************
 - - Start of Connection_Rotations Enum - -
-========================================================================================================================
+************************************************************************************************************************
 */
 
 /***********************************************************************************************************************
@@ -131,9 +131,9 @@ constexpr std::array<uint32_t, 4> CONNECTION_SIDE_MASKS = {
     0xFF000000}; // Left
 
 /*
-========================================================================================================================
+************************************************************************************************************************
 - - Start of D_Connection Union - -
-========================================================================================================================
+************************************************************************************************************************
 */
 
 /***********************************************************************************************************************
@@ -304,9 +304,9 @@ std::unordered_map<uint32_t, std::string> const Connection_Bit_Mask_to_Str_Map =
 };
 
 /*
-========================================================================================================================
+************************************************************************************************************************
 - - Start of D_Tile Class - -
-========================================================================================================================
+************************************************************************************************************************
 */
 
 /***********************************************************************************************************************
@@ -336,25 +336,136 @@ class D_Tile
 public:
     using Progress_Callback = std::function<void(std::string const &phase, size_t completed, size_t total)>;
 
+    /***********************************************************************************************************************
+     * @brief Creates a tile from an image file and its encoded filename metadata.
+     *
+     * @param[in] path Path to the tile image file.
+     *
+     * @throws std::invalid_argument if the path or its tile metadata is invalid.
+     **********************************************************************************************************************/
     D_Tile(std::filesystem::path const &path);
+
+    /***********************************************************************************************************************
+     * @brief Destroys the tile.
+     **********************************************************************************************************************/
     ~D_Tile();
+
+    /***********************************************************************************************************************
+     * @brief Loads tiles from a directory into the global tile maps.
+     *
+     * @param[in] dir_path Directory containing theme subdirectories of tile images.
+     * @param[in] progress_callback Callback notified as tiles are loaded.
+     *
+     * @note Call generate_tiles() to create and register tile permutations.
+     **********************************************************************************************************************/
     static void load_tiles(std::filesystem::path const &dir_path = DEFAULT_INPUT_IMG_PATH,
                            Progress_Callback const &progress_callback = {});
+
+    /***********************************************************************************************************************
+     * @brief Creates and registers permutations for loaded permutable tiles.
+     *
+     * @param[in] progress_callback Callback notified as generated images are written.
+     **********************************************************************************************************************/
     static void generate_tiles(Progress_Callback const &progress_callback = {});
+
+    /***********************************************************************************************************************
+     * @brief Returns the tile name.
+     *
+     * @retval std::string Tile name.
+     **********************************************************************************************************************/
     std::string const &get_name() const;
+
+    /***********************************************************************************************************************
+     * @brief Returns the tile theme.
+     *
+     * @retval std::string Tile theme.
+     **********************************************************************************************************************/
     std::string const &get_theme() const;
+
+    /***********************************************************************************************************************
+     * @brief Returns the tile ID.
+     *
+     * @retval uint64_t Tile ID.
+     **********************************************************************************************************************/
     uint64_t get_id() const;
+
+    /***********************************************************************************************************************
+     * @brief Returns the tile connection bitmap.
+     *
+     * @retval D_Connections Tile connection bitmap.
+     **********************************************************************************************************************/
     D_Connections get_connections() const;
+
+    /***********************************************************************************************************************
+     * @brief Returns the image associated with the tile.
+     *
+     * @retval std::shared_ptr<QImage> Pointer to the loaded tile image.
+     **********************************************************************************************************************/
     std::shared_ptr<QImage> const &get_image();
+
+    /***********************************************************************************************************************
+     * @brief Returns whether this tile can be permuted.
+     *
+     * @retval bool Whether the tile can be permuted.
+     **********************************************************************************************************************/
     bool is_permutateable() const;
+
+    /***********************************************************************************************************************
+     * @brief Returns whether this tile is an entrance.
+     *
+     * @retval bool Whether the tile is an entrance tile.
+     **********************************************************************************************************************/
     bool is_entrance() const;
+
+    /***********************************************************************************************************************
+     * @brief Returns whether this tile is an exit.
+     *
+     * @retval bool Whether the tile is an exit tile.
+     **********************************************************************************************************************/
     bool is_exit() const;
+
+    /***********************************************************************************************************************
+     * @brief Returns whether this tile can be flipped during permutation.
+     *
+     * @retval bool Whether the tile is flippable.
+     **********************************************************************************************************************/
     bool is_flippable() const;
+
+    /***********************************************************************************************************************
+     * @brief Returns whether this tile was created as a flipped permutation.
+     *
+     * @retval bool Whether the tile was flipped.
+     **********************************************************************************************************************/
     bool is_flipped() const;
+
+    /***********************************************************************************************************************
+     * @brief Returns the rotation used to produce this tile's image.
+     *
+     * @retval Connection_Rotations The applied rotation, or Zero for original images.
+     **********************************************************************************************************************/
     Connection_Rotations get_rotation_amount() const;
+
+    /***********************************************************************************************************************
+     * @brief Returns the tile metadata as a string.
+     *
+     * @retval std::string The stringified tile metadata.
+     **********************************************************************************************************************/
     std::string const to_string() const;
+
+    /***********************************************************************************************************************
+     * @brief Returns the tile connections as a comma-separated string.
+     *
+     * @retval std::string Stringified connections.
+     **********************************************************************************************************************/
     std::string const connections_to_string() const;
 
+    /***********************************************************************************************************************
+     * @brief Filters globally loaded tiles by theme.
+     *
+     * @param[in] theme Theme to filter by.
+     *
+     * @retval std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Tiles that match the theme.
+     **********************************************************************************************************************/
     static std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> filter_by_theme(std::string const &theme);
 
 private:
@@ -374,6 +485,18 @@ private:
     //! NOTE: May be replaced later with id set by a database.
     static std::atomic<uint64_t> id_counter;
 
+    /***********************************************************************************************************************
+     * @brief Creates a tile from permutation metadata.
+     *
+     * @param[in] permutation_name Name of the permutation.
+     * @param[in] permutation_theme Theme of the permutation.
+     * @param[in] permutation_id ID for the permutation.
+     * @param[in] permutation_connections Connections for the permutation.
+     * @param[in] permutation_is_entrance_flag Whether the permutation is an entrance.
+     * @param[in] permutation_is_exit_flag Whether the permutation is an exit.
+     * @param[in] permutation_is_permutable_flag Whether the permutation is permutable.
+     * @param[in] permutation_is_flippable_flag Whether the permutation is flippable.
+     **********************************************************************************************************************/
     D_Tile(std::string permutation_name,
            std::string permutation_theme,
            uint64_t permutation_id,
@@ -382,14 +505,64 @@ private:
            bool permutation_is_exit_flag,
            bool permutation_is_permutable_flag,
            bool permutation_is_flippable_flag);
+
+    /***********************************************************************************************************************
+     * @brief Maps filename connection tokens to the tile connection bitmap.
+     *
+     * @param[in] connection_tokens Connection tokens read from the filename.
+     **********************************************************************************************************************/
     inline void map_connection_tokens(std::vector<std::string> connection_tokens);
+
+    /***********************************************************************************************************************
+     * @brief Creates permutations of a tile and adds them to the supplied vector.
+     *
+     * @param[in] permutateable Tile to permute.
+     * @param[out] permutations Vector to receive the permutations.
+     * @param[out] entrance_count Number of entrances created during generation.
+     * @param[out] exit_count Number of exits created during generation.
+     **********************************************************************************************************************/
     static inline void permutate(std::shared_ptr<D_Tile> permutateable,
                                  std::vector<std::shared_ptr<D_Tile>> &permutations,
                                  size_t &entrance_count,
                                  size_t &exit_count);
+
+    /***********************************************************************************************************************
+     * @brief Builds the filename for a generated tile image.
+     *
+     * @retval std::string Filename containing this tile's metadata.
+     **********************************************************************************************************************/
     inline std::string const to_filename();
+
+    /***********************************************************************************************************************
+     * @brief Generates and saves this tile's image at its configured path.
+     *
+     * @retval bool Whether the image was saved successfully.
+     **********************************************************************************************************************/
     bool generate_tile_img();
+
+    /***********************************************************************************************************************
+     * @brief Copies the tile image to a loaded-image directory and updates its path.
+     *
+     * @param[in] loaded_dir Directory to receive the tile image.
+     **********************************************************************************************************************/
     void copy_tile_img(std::filesystem::path loaded_dir);
+
+    /***********************************************************************************************************************
+     * @brief Rotates a connection bitmap by the specified rotation.
+     *
+     * @param[in] rotation Rotation to apply.
+     * @param[in] to_rotate Connections to rotate.
+     *
+     * @retval D_Connections Rotated connections.
+     **********************************************************************************************************************/
     static inline D_Connections rotate_connections(Connection_Rotations rotation, D_Connections to_rotate);
+
+    /***********************************************************************************************************************
+     * @brief Flips a connection bitmap horizontally.
+     *
+     * @param[in] to_flip Connections to flip.
+     *
+     * @retval D_Connections Flipped connections.
+     **********************************************************************************************************************/
     static inline D_Connections flip_connections(D_Connections to_flip);
 };

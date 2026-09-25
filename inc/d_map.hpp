@@ -9,9 +9,9 @@
 #pragma once
 
 /*
-========================================================================================================================
+************************************************************************************************************************
 - - System Inculdes - -
-========================================================================================================================
+************************************************************************************************************************
 */
 
 #include <cstdint>
@@ -22,18 +22,18 @@
 #include <random>
 
 /*
-========================================================================================================================
+************************************************************************************************************************
 - - Local Includes - -
-========================================================================================================================
+************************************************************************************************************************
 */
 
 #include "d_tile.hpp"
 #include "d_builder_common.hpp"
 
 /*
-========================================================================================================================
-- - Macros - -
-========================================================================================================================
+************************************************************************************************************************
+- - Constants / Macros - -
+************************************************************************************************************************
 */
 
 /***********************************************************************************************************************
@@ -47,9 +47,9 @@ constexpr uint8_t MAX_NEIGHBOORS = 4;
 constexpr uint8_t ONE_HUNDRED_PERCENT = 100;
 
 /*
-========================================================================================================================
+************************************************************************************************************************
 - - Globals - -
-========================================================================================================================
+************************************************************************************************************************
 */
 
 /***********************************************************************************************************************
@@ -91,9 +91,9 @@ constexpr std::array<uint8_t, 4> TILE_NEIGHBOOR_SIDE_IDX_MIRRORS =
 };
 
 /*
-========================================================================================================================
+************************************************************************************************************************
 - - Start of D_Map - -
-========================================================================================================================
+************************************************************************************************************************
 */
 
 /***********************************************************************************************************************
@@ -116,20 +116,79 @@ constexpr std::array<uint8_t, 4> TILE_NEIGHBOOR_SIDE_IDX_MIRRORS =
 class D_Map
 {
 public:
+    /***********************************************************************************************************************
+     * @brief Creates a map and generates its initial design.
+     *
+     * @param[in] in_cols The width of the map.
+     * @param[in] in_rows The height of the map.
+     * @param[in] in_con_chance Percentage chance for tiles to connect during generation.
+     * @param[in] usable_tiles Map of tiles to use during generation.
+     **********************************************************************************************************************/
     D_Map(uint8_t in_cols,
           uint8_t in_rows,
           uint8_t in_con_chance,
           std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> &usable_tiles);
+
+    /***********************************************************************************************************************
+     * @brief Destroys the map.
+     **********************************************************************************************************************/
     ~D_Map();
+
+    /***********************************************************************************************************************
+     * @brief Generates a new map design using the current settings and tile map.
+     **********************************************************************************************************************/
     void generate();
+
+    /***********************************************************************************************************************
+     * @brief Generates a new map design using the supplied settings and tile map.
+     *
+     * @param[in] in_cols New width of the map.
+     * @param[in] in_rows New height of the map.
+     * @param[in] in_con_chance New percentage chance of connections during generation.
+     * @param[in] usable_tiles New map of tiles to use during generation.
+     **********************************************************************************************************************/
     void generate(uint8_t in_cols,
                   uint8_t in_rows,
                   uint8_t in_con_chance,
                   std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> &usable_tiles);
+
+    /***********************************************************************************************************************
+     * @brief Saves the current map design as an image at the given path.
+     *
+     * @param[in] file_name File name to use when saving the map.
+     *
+     * @retval bool Whether the save was successful.
+     **********************************************************************************************************************/
     bool save(std::string file_name) const;
+
+    /***********************************************************************************************************************
+     * @brief Replaces the tile at a point in the map display matrix.
+     *
+     * @param[in] col X coordinate in the map.
+     * @param[in] row Y coordinate in the map.
+     * @param[in] replacement Tile to place at the given coordinates.
+     **********************************************************************************************************************/
     void swap_tile(uint8_t col, uint8_t row, std::shared_ptr<D_Tile> replacement);
+
+    /***********************************************************************************************************************
+     * @brief Returns the map settings and current design as a string.
+     *
+     * @retval std::string The map in a stringified form.
+     **********************************************************************************************************************/
     std::string const to_string() const;
+
+    /***********************************************************************************************************************
+     * @brief Returns the map display matrix in [column][row] form.
+     *
+     * @retval std::vector<std::vector<std::shared_ptr<D_Tile>>> The display matrix.
+     **********************************************************************************************************************/
     std::vector<std::vector<std::shared_ptr<D_Tile>>> const &get_display_mat();
+
+    /***********************************************************************************************************************
+     * @brief Returns the connection chance set for the map.
+     *
+     * @retval uint8_t The configured connection chance between tiles during generation.
+     **********************************************************************************************************************/
     uint8_t get_connection_chance() const;
 
 private:
@@ -144,14 +203,47 @@ private:
     uint8_t rows;
     uint8_t connection_chance; // Out of 100, values over or equal to 100 yield a 100% chance of connection.
 
+    /***********************************************************************************************************************
+     * @brief Resets the data structures used to generate a map design.
+     **********************************************************************************************************************/
     void reset_for_generate(void);
+
+    /***********************************************************************************************************************
+     * @brief Places a random entrance and seeds the generation queue with its connected neighbours.
+     **********************************************************************************************************************/
     void start_generation_at_entrance(void);
+
+    /***********************************************************************************************************************
+     * @brief Chooses a tile that satisfies required and possible connection masks.
+     *
+     * @param[in] required_connections Connections that must be present.
+     * @param[in] possible_connections Connections that may be present.
+     * @param[in] tile_map Tile map from which to choose.
+     *
+     * @retval std::shared_ptr<D_Tile> A tile that meets the connection requirements.
+     **********************************************************************************************************************/
     std::shared_ptr<D_Tile> chose_tile_based_on_connections(D_Connections valid_connections,
                                                             D_Connections possible_connections,
                                                             std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> const &tile_map);
+
+    /***********************************************************************************************************************
+     * @brief Processes queued map positions and assigns a tile to each one.
+     **********************************************************************************************************************/
     void place_nodes(void);
+
+    /***********************************************************************************************************************
+     * @brief Determines a point's required and possible connections and queues connected neighbours.
+     *
+     * @param[in] current_point Current map coordinate.
+     * @param[inout] valid_connections Connection mask to fill with required connections.
+     * @param[inout] possible_connections Connection mask to fill with possible connections.
+     **********************************************************************************************************************/
     void calculate_connections_and_add_visitors(std::pair<uint8_t, uint8_t> const &current_point,
                                                 D_Connections &valid_connections,
                                                 D_Connections &possible_connections);
+
+    /***********************************************************************************************************************
+     * @brief Fills unassigned display-matrix positions with the empty tile.
+     **********************************************************************************************************************/
     void fill_empty_tiles(void);
 };
