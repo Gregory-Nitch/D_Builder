@@ -48,9 +48,9 @@ class D_Map;
 */
 
 /***********************************************************************************************************************
- * @brief CLI generation string to match to cli params.
+ * @brief CLI no generation string to match to cli params.
  **********************************************************************************************************************/
-constexpr const char *GENERATE_IMG_CLI_COMMAND = "generate";
+constexpr const char *NO_GENERATE_IMG_CLI_COMMAND = "no_gen";
 
 /***********************************************************************************************************************
  * @brief Default image directory path, will contain the input, loaded and output directories.

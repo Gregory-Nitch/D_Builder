@@ -43,7 +43,6 @@ std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Exit_Map = {};
 std::unordered_map<std::string, std::filesystem::path> Loaded_Img_Dirs = {};
 std::shared_ptr<D_Tile> Empty_Tile = nullptr;
 std::unique_ptr<D_Map> Dungeon_Map = nullptr;
-std::string Gen_Flag = GENERATE_IMG_CLI_COMMAND;
 libcpp59::logger Logger = {};
 uint64_t G_MAX = UINT64_MAX;
 

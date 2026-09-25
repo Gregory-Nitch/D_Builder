@@ -54,7 +54,7 @@ std::unordered_map<uint64_t, std::shared_ptr<D_Tile>> Active_Theme_Map = {};
 std::unordered_map<std::string, std::filesystem::path> Loaded_Img_Dirs = {};
 std::shared_ptr<D_Tile> Empty_Tile = nullptr;
 std::unique_ptr<D_Map> Dungeon_Map = nullptr;
-std::string Gen_Flag = GENERATE_IMG_CLI_COMMAND;
+std::string Gen_Flag = NO_GENERATE_IMG_CLI_COMMAND;
 libcpp59::logger Logger = {};
 
 /*
@@ -100,15 +100,15 @@ int main(int argc, char **argv)
         QCoreApplication::processEvents(QEventLoop::AllEvents);
     };
 
-    if (2 == argc && !Gen_Flag.compare(argv[1]))
-    {
-        D_Tile::load_tiles(DEFAULT_INPUT_IMG_PATH, update_tile_progress);
-        D_Tile::generate_tiles(update_tile_progress);
-    }
-    else // Only loading required.
+    if (2 == argc && !Gen_Flag.compare(argv[1])) // User skipped generation.
     {
         Logger.log(libcpp59::log_level::INFO, "Skipping tile generation.");
         D_Tile::load_tiles(DEFAULT_IMG_LOADED_ROOT_PATH, update_tile_progress);
+    }
+    else
+    {
+        D_Tile::load_tiles(DEFAULT_INPUT_IMG_PATH, update_tile_progress);
+        D_Tile::generate_tiles(update_tile_progress);
     }
 
     if (Tile_Map.empty())
