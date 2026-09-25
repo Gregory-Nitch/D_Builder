@@ -31,6 +31,7 @@
 #include <QPixmap>
 #include <QObject>
 #include <QEvent>
+#include <QWidget>
 #include <QtGlobal>
 
 /*
@@ -59,11 +60,17 @@ public:
     QGraphicsScene *graphicsViewScene;
     std::vector<std::vector<D_TileGraphicsItem *>> tile_graphics_mat;
 
+protected:
+    bool eventFilter(QObject *watched, QEvent *event) override;
+
 private:
     std::function<void(std::size_t row, std::size_t col, Qt::MouseButton)> clickHandler;
+    QWidget *mapInteractionOverlay = nullptr;
     bool requires_map_generation = false;
     qreal maxZoomMultiplier = 8.0;
     qreal minZoom = 0.1;
+    void setMapGenerationRequired(bool required);
+    void updateMapInteractionOverlayGeometry();
     void resetGraphicsView();
     void on_tile_right_clicked(std::size_t row, std::size_t col, Qt::MouseButton button);
 

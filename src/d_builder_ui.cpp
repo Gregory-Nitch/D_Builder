@@ -35,6 +35,8 @@
 #include <QTimer>
 #include <QMessageBox>
 #include <QStringList>
+#include <QLabel>
+#include <QVBoxLayout>
 
 DBuilderUI::DBuilderUI(QWidget *parent) : QMainWindow(parent),
                                           ui(new Ui::MainWindow),
@@ -90,13 +92,52 @@ DBuilderUI::DBuilderUI(QWidget *parent) : QMainWindow(parent),
     ui->graphicsView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     ui->graphicsView->setDragMode(QGraphicsView::ScrollHandDrag);
 
+    mapInteractionOverlay = new QWidget(ui->graphicsView);
+    mapInteractionOverlay->setStyleSheet("background-color: rgba(50, 50, 50, 220);");
+    auto *overlayLayout = new QVBoxLayout(mapInteractionOverlay);
+    auto *overlayMessage = new QLabel("Map settings changed. Generate a new map to continue.", mapInteractionOverlay);
+    overlayMessage->setAlignment(Qt::AlignCenter);
+    overlayMessage->setWordWrap(true);
+    overlayMessage->setStyleSheet("background: transparent; color: #e05252; font-size: 24px;");
+    overlayLayout->addWidget(overlayMessage);
+    updateMapInteractionOverlayGeometry();
+    mapInteractionOverlay->hide();
+    ui->graphicsView->viewport()->installEventFilter(this);
+
     QTimer::singleShot(0, this, [this]
-                       { resetGraphicsView(); });
+                       {
+                           resetGraphicsView();
+                           updateMapInteractionOverlayGeometry(); });
 }
 
 DBuilderUI::~DBuilderUI()
 {
     delete ui;
+}
+
+bool DBuilderUI::eventFilter(QObject *watched, QEvent *event)
+{
+    if (watched == ui->graphicsView->viewport() && event->type() == QEvent::Resize)
+    {
+        QTimer::singleShot(0, this, [this]
+                           { updateMapInteractionOverlayGeometry(); });
+    }
+
+    return QMainWindow::eventFilter(watched, event);
+}
+
+void DBuilderUI::setMapGenerationRequired(bool required)
+{
+    requires_map_generation = required;
+    updateMapInteractionOverlayGeometry();
+    mapInteractionOverlay->setVisible(required);
+    if (required)
+        mapInteractionOverlay->raise();
+}
+
+void DBuilderUI::updateMapInteractionOverlayGeometry()
+{
+    mapInteractionOverlay->setGeometry(ui->graphicsView->viewport()->geometry());
 }
 
 void DBuilderUI::on_tile_right_clicked(std::size_t row, std::size_t col, Qt::MouseButton button)
@@ -121,9 +162,6 @@ void DBuilderUI::resetGraphicsView()
 
 void DBuilderUI::onGenerateButtonClicked()
 {
-    requires_map_generation = false;
-    //! TODO: Remove overlay from graphics view
-
     Active_Theme_Map = D_Tile::filter_by_theme(ui->StyleComboBox->currentText().toLower().toStdString());
     Dungeon_Map->generate(ui->ColumnsSpinner->value(),
                           ui->RowsSpinner->value(),
@@ -155,6 +193,7 @@ void DBuilderUI::onGenerateButtonClicked()
     }
 
     resetGraphicsView();
+    setMapGenerationRequired(false);
 }
 void DBuilderUI::onSaveButtonClicked()
 {
@@ -170,34 +209,34 @@ void DBuilderUI::onSaveButtonClicked()
 
 void DBuilderUI::onLoadTileSetButtonClicked()
 {
-    requires_map_generation = true;
+    setMapGenerationRequired(true);
     //! TODO: Implementation for the load tile set button click event
 }
 
 void DBuilderUI::onPercentConnectionChanged()
 {
-    requires_map_generation = true;
+    setMapGenerationRequired(true);
 
     //! TODO: Implementation for the percent connection value change event
 }
 
 void DBuilderUI::onNumRowsCChanged()
 {
-    requires_map_generation = true;
+    setMapGenerationRequired(true);
 
     //! TODO: Implementation for the number of rows value change event
 }
 
 void DBuilderUI::onNumColsChanged()
 {
-    requires_map_generation = true;
+    setMapGenerationRequired(true);
 
     //! TODO: Implementation for the number of columns value change event
 }
 
 void DBuilderUI::onStyleChanged()
 {
-    requires_map_generation = true;
+    setMapGenerationRequired(true);
 
     //! TODO: Implementation for the style change event
 }
