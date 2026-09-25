@@ -341,6 +341,13 @@ public:
      *
      * @param[in] path Path to the tile image file.
      *
+     * @note The filename must encode tile metadata using this format:
+     *       name;theme;connections;entrance;exit;permutable;flippable.jpg
+     *       `connections` is a comma-separated list of T0-T7, R0-R7, B0-B7, or L0-L7 tokens, or `NA` for a tile with no
+     *       connections. The remaining fields must be `true` or `false`. A tile cannot be both an entrance and an exit.
+     *       Flippable tiles must also be permutable and must create a unique horizontal reflection. Permutable tiles
+     *       create unique rotations; a tile may be permutable without being flippable.
+     *
      * @throws std::invalid_argument if the path or its tile metadata is invalid.
      **********************************************************************************************************************/
     D_Tile(std::filesystem::path const &path);
