@@ -35,6 +35,7 @@
 #include <QFrame>
 #include <QTimer>
 #include <QMessageBox>
+#include <QFileDialog>
 #include <QStringList>
 #include <QLabel>
 #include <QVBoxLayout>
@@ -229,9 +230,15 @@ void DBuilderUI::onSaveButtonClicked()
                                         cols,
                                         rows);
 
-    //! TODO: We need to send the file path to the dialog for the user as a default value but updated its name here.
+    const QString selectedFilePath = QFileDialog::getSaveFileName(
+        this,
+        "Save Dungeon Map",
+        QString::fromStdString(file_path),
+        "JPEG Image (*.jpg *.jpeg)");
+    if (selectedFilePath.isEmpty())
+        return;
 
-    Dungeon_Map->save(file_path);
+    Dungeon_Map->save(selectedFilePath.toStdString());
 }
 
 void DBuilderUI::onLoadTileSetButtonClicked()
