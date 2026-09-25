@@ -64,6 +64,7 @@ private:
     qreal maxZoomMultiplier = 8.0;
     qreal minZoom = 0.1;
     void resetGraphicsView();
+    void on_tile_right_clicked(std::size_t row, std::size_t col, Qt::MouseButton button);
 
 private slots:
     void onGenerateButtonClicked();

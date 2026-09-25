@@ -32,7 +32,8 @@
 class D_TileGraphicsItem : public QGraphicsPixmapItem
 {
 public:
-    D_TileGraphicsItem(std::shared_ptr<D_Tile> const &tile, std::size_t row, std::size_t col, QGraphicsItem *parent = nullptr);
+    D_TileGraphicsItem(std::shared_ptr<D_Tile> const &tile, std::size_t row, std::size_t col, std::function<void(std::size_t row, std::size_t col, Qt::MouseButton)> clickHandler, QGraphicsItem *parent = nullptr);
     std::size_t row;
     std::size_t col;
+    std::function<void(std::size_t row, std::size_t col, Qt::MouseButton)> clickHandler;
 };

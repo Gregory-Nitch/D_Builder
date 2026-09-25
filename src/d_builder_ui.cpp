@@ -95,6 +95,15 @@ DBuilderUI::~DBuilderUI()
     delete ui;
 }
 
+void DBuilderUI::on_tile_right_clicked(std::size_t row, std::size_t col, Qt::MouseButton button)
+{
+    if (button == Qt::RightButton)
+    {
+        Logger.log(libcpp59::log_level::INFO, "Tile right-clicked at row " + std::to_string(row) + ", col " + std::to_string(col));
+        //! TODO: Implementation for the tile right-click event
+    }
+}
+
 void DBuilderUI::resetGraphicsView()
 {
     const QRectF mapBounds = graphicsViewScene->itemsBoundingRect();

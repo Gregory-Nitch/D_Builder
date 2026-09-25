@@ -13,9 +13,10 @@
 
 #include "d_tile_graphics_item.hpp"
 
-D_TileGraphicsItem::D_TileGraphicsItem(std::shared_ptr<D_Tile> const &tile, std::size_t row, std::size_t col, QGraphicsItem *parent)
+D_TileGraphicsItem::D_TileGraphicsItem(std::shared_ptr<D_Tile> const &tile, std::size_t row, std::size_t col, std::function<void(std::size_t row, std::size_t col, Qt::MouseButton)> clickHandler, QGraphicsItem *parent)
     : QGraphicsPixmapItem(QPixmap::fromImage(*tile->get_image()), parent),
       row(row),
-      col(col)
+      col(col),
+      clickHandler(clickHandler)
 {
 }
