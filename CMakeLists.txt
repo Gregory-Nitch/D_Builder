@@ -24,6 +24,7 @@ target_sources(D_Builder
               PRIVATE src/d_map.cpp
               PRIVATE src/d_tile.cpp
               PRIVATE src/d_tile_graphics_item.cpp
+              PRIVATE src/d_tile_replacement_dialog.cpp
               PRIVATE src/d_map_graphics_view.cpp
               PRIVATE src/d_builder_ui.cpp
               PRIVATE inc/d_builder_ui.hpp # need this header because of Q_OBJECT macro

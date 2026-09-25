@@ -23,6 +23,7 @@
 #include "d_builder_ui.hpp"
 #include "d_map.hpp"
 #include "d_tile.hpp"
+#include "d_tile_replacement_dialog.hpp"
 #include "ui_D_Builder.h" // Generated header for the D_Builder UI
 
 /*
@@ -144,8 +145,23 @@ void DBuilderUI::on_tile_right_clicked(std::size_t row, std::size_t col, Qt::Mou
 {
     if (button == Qt::RightButton)
     {
-        Logger.log(libcpp59::log_level::INFO, "Tile right-clicked at row " + std::to_string(row) + ", col " + std::to_string(col));
-        //! TODO: Implementation for the tile right-click event
+        std::shared_ptr<D_Tile> const &current_tile = Dungeon_Map->get_display_mat().at(col).at(row);
+        TileReplacementDialog dialog(current_tile, Active_Theme_Map, this);
+        if (dialog.exec() != QDialog::Accepted)
+            return;
+
+        std::shared_ptr<D_Tile> replacement = dialog.selectedTile();
+        if (!replacement)
+            return;
+
+        Logger.log(libcpp59::log_level::INFO, "Replacing tile [" + current_tile->get_name() + "] at row " + std::to_string(row) + ", col " + std::to_string(col) + " with tile: " + replacement->get_name());
+        Dungeon_Map->swap_tile(
+            static_cast<uint8_t>(col),
+            static_cast<uint8_t>(row),
+            replacement);
+
+        tile_graphics_mat[col][row]->setPixmap(
+            QPixmap::fromImage(*replacement->get_image()));
     }
 }
 
@@ -216,27 +232,19 @@ void DBuilderUI::onLoadTileSetButtonClicked()
 void DBuilderUI::onPercentConnectionChanged()
 {
     setMapGenerationRequired(true);
-
-    //! TODO: Implementation for the percent connection value change event
 }
 
 void DBuilderUI::onNumRowsCChanged()
 {
     setMapGenerationRequired(true);
-
-    //! TODO: Implementation for the number of rows value change event
 }
 
 void DBuilderUI::onNumColsChanged()
 {
     setMapGenerationRequired(true);
-
-    //! TODO: Implementation for the number of columns value change event
 }
 
 void DBuilderUI::onStyleChanged()
 {
     setMapGenerationRequired(true);
-
-    //! TODO: Implementation for the style change event
 }
